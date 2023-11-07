@@ -4,6 +4,7 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import { Command, flags } from "@oclif/command";
 import { ParserOutput } from "@oclif/parser/lib/parse";
 import { DEFAULT_TOKEN_LIST } from "@basex-fi/sdk-core";
+
 import {
   Currency,
   CurrencyAmount,
@@ -32,7 +33,6 @@ import {
   IV3PoolProvider,
   MetricLogger,
   NodeJSCache,
-  OnChainQuoteProvider,
   routeAmountsToString,
   RouteWithValidQuote,
   setGlobalLogger,
@@ -40,17 +40,15 @@ import {
   SimulationStatus,
   TO_PROVIDER,
   TenderlySimulator,
-  TokenPropertiesProvider,
   TokenProvider,
   UniswapMulticallProvider,
   V3PoolProvider,
   V3RouteWithValidQuote,
   TO_NETWORK_NAME,
+  V3SubgraphProvider,
 } from "../src";
 import { LegacyGasPriceProvider } from "../src/providers/legacy-gas-price-provider";
 import { OnChainGasPriceProvider } from "../src/providers/on-chain-gas-price-provider";
-
-import { OnChainTokenFeeFetcher } from "../src/providers/token-fee-fetcher";
 
 export abstract class BaseCommand extends Command {
   static flags = {
@@ -180,10 +178,10 @@ export abstract class BaseCommand extends Command {
   }
 
   async init() {
+    console.log("init");
     const query: ParserOutput<any, any> = this.parse();
     const {
       chainId: chainIdNumb,
-      router: routerStr,
       debug,
       debugJSON,
       tokenListURI,
@@ -265,11 +263,6 @@ export abstract class BaseCommand extends Command {
       new V3PoolProvider(multicall2Provider),
       new NodeJSCache(new NodeCache({ stdTTL: 360, useClones: false }))
     );
-    const tokenFeeFetcher = new OnChainTokenFeeFetcher(provider);
-    const tokenPropertiesProvider = new TokenPropertiesProvider(
-      new NodeJSCache(new NodeCache({ stdTTL: 360, useClones: false })),
-      tokenFeeFetcher
-    );
 
     const tenderlySimulator = new TenderlySimulator(
       "http://api.tenderly.co",
@@ -305,8 +298,8 @@ export abstract class BaseCommand extends Command {
         ),
         gasPriceCache
       ),
+      v3SubgraphProvider: new V3SubgraphProvider(),
       simulator,
-      v3GasModelFactory: {} as any,
     });
 
     this._swapToRatioRouter = router;

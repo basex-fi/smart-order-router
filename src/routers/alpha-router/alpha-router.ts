@@ -3,6 +3,8 @@ import { BaseProvider, JsonRpcProvider } from "@ethersproject/providers";
 
 import { Protocol, SwapRouter, Trade } from "@basex-fi/router-sdk";
 
+import { V3HeuristicGasModelFactory } from "./gas-models/v3/v3-heuristic-gas-model";
+
 import {
   Pool,
   Position,
@@ -158,7 +160,7 @@ export type AlphaRouterParams = {
    * A factory for generating a gas model that is used when estimating the gas used by
    * V3 routes.
    */
-  v3GasModelFactory: IOnChainGasModelFactory;
+  v3GasModelFactory?: IOnChainGasModelFactory;
 
   /**
    * A token list that specifies Token that should be blocked from routing through.
@@ -497,7 +499,8 @@ export class AlphaRouter
           new NodeCache({ stdTTL: 7, useClones: false })
         )
       );
-    this.v3GasModelFactory = v3GasModelFactory;
+    this.v3GasModelFactory =
+      v3GasModelFactory ?? new V3HeuristicGasModelFactory();
 
     this.swapRouterProvider =
       swapRouterProvider ?? new SwapRouterProvider(this.multicall2Provider);
@@ -712,6 +715,7 @@ export class AlphaRouter
     swapConfig?: SwapOptions,
     partialRoutingConfig: Partial<AlphaRouterConfig> = {}
   ): Promise<SwapRoute | null> {
+    console.log("in route");
     const { currencyIn, currencyOut } =
       this.determineCurrencyInOutFromTradeType(
         tradeType,
@@ -721,6 +725,8 @@ export class AlphaRouter
 
     const tokenIn = currencyIn.wrapped;
     const tokenOut = currencyOut.wrapped;
+
+    console.log("currencies", tokenIn, tokenOut);
 
     metric.setProperty("pair", `${tokenIn.symbol}/${tokenOut.symbol}`);
     metric.setProperty("tokenIn", tokenIn.address);
@@ -890,6 +896,8 @@ export class AlphaRouter
       swapRouteFromChainPromise,
     ]);
 
+    console.log("swap routes", swapRouteFromCache, swapRouteFromChain);
+
     let swapRouteRaw: BestSwapRoute | null;
     let hitsCachedRoute = false;
     if (cacheMode === CacheMode.Livemode && swapRouteFromCache) {
@@ -1056,6 +1064,7 @@ export class AlphaRouter
     // If user provided recipient, deadline etc. we also generate the calldata required to execute
     // the swap and return it too.
     if (swapConfig) {
+      console.log("swap config", swapConfig);
       methodParameters = buildSwapMethodParameters(trade, swapConfig);
     }
 

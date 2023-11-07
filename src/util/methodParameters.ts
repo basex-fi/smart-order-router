@@ -109,6 +109,7 @@ export function buildSwapMethodParameters(
   swapConfig: SwapOptions
 ): MethodParameters {
   if (swapConfig.type == SwapType.SWAP_ROUTER_02) {
+    console.log("swap config type", swapConfig.type);
     const { recipient, slippageTolerance, deadline, inputTokenPermit } =
       swapConfig;
 
