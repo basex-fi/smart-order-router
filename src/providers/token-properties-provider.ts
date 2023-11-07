@@ -1,20 +1,20 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { ChainId, Token } from '@uniswap/sdk-core';
+import { BigNumber } from "@ethersproject/bignumber";
+import { Token } from "@basex-fi/sdk-core";
 
-import { log, metric, MetricLoggerUnit } from '../util';
+import { log, metric, MetricLoggerUnit } from "../util";
 
-import { ICache } from './cache';
-import { ProviderConfig } from './provider';
+import { ICache } from "./cache";
+import { ProviderConfig } from "./provider";
 import {
   DEFAULT_TOKEN_FEE_RESULT,
   ITokenFeeFetcher,
   TokenFeeMap,
   TokenFeeResult,
-} from './token-fee-fetcher';
+} from "./token-fee-fetcher";
 import {
   DEFAULT_ALLOWLIST,
   TokenValidationResult,
-} from './token-validator-provider';
+} from "./token-validator-provider";
 
 export const DEFAULT_TOKEN_PROPERTIES_RESULT: TokenPropertiesResult = {
   tokenFeeResult: DEFAULT_TOKEN_FEE_RESULT,
@@ -37,17 +37,15 @@ export interface ITokenPropertiesProvider {
 }
 
 export class TokenPropertiesProvider implements ITokenPropertiesProvider {
-  private CACHE_KEY = (chainId: ChainId, address: string) =>
-    `token-properties-${chainId}-${address}`;
+  private CACHE_KEY = (address: string) => `token-properties-${address}`;
 
   constructor(
-    private chainId: ChainId,
     private tokenPropertiesCache: ICache<TokenPropertiesResult>,
     private tokenFeeFetcher: ITokenFeeFetcher,
     private allowList = DEFAULT_ALLOWLIST,
     private positiveCacheEntryTTL = POSITIVE_CACHE_ENTRY_TTL,
     private negativeCacheEntryTTL = NEGATIVE_CACHE_ENTRY_TTL
-  ) {}
+  ) { }
 
   public async getTokensProperties(
     tokens: Token[],
@@ -55,10 +53,7 @@ export class TokenPropertiesProvider implements ITokenPropertiesProvider {
   ): Promise<TokenPropertiesMap> {
     const tokenToResult: TokenPropertiesMap = {};
 
-    if (
-      !providerConfig?.enableFeeOnTransferFeeFetching ||
-      this.chainId !== ChainId.MAINNET
-    ) {
+    if (!providerConfig?.enableFeeOnTransferFeeFetching) {
       return tokenToResult;
     }
 
@@ -74,7 +69,7 @@ export class TokenPropertiesProvider implements ITokenPropertiesProvider {
       const cachedValue = tokenProperties[address];
       if (cachedValue) {
         metric.putMetric(
-          'TokenPropertiesProviderBatchGetCacheHit',
+          "TokenPropertiesProviderBatchGetCacheHit",
           1,
           MetricLoggerUnit.Count
         );
@@ -146,7 +141,7 @@ export class TokenPropertiesProvider implements ITokenPropertiesProvider {
             tokenToResult[address] = tokenPropertiesResult;
 
             metric.putMetric(
-              'TokenPropertiesProviderBatchGetCacheMiss',
+              "TokenPropertiesProviderBatchGetCacheMiss",
               1,
               MetricLoggerUnit.Count
             );
@@ -154,7 +149,7 @@ export class TokenPropertiesProvider implements ITokenPropertiesProvider {
             // update cache concurrently
             // at this point, we are confident that the tokens are FOT, so we can hardcode the validation result
             return this.tokenPropertiesCache.set(
-              this.CACHE_KEY(this.chainId, address),
+              this.CACHE_KEY(address),
               tokenPropertiesResult,
               this.positiveCacheEntryTTL
             );
@@ -172,7 +167,7 @@ export class TokenPropertiesProvider implements ITokenPropertiesProvider {
             tokenToResult[address] = tokenPropertiesResult;
 
             return this.tokenPropertiesCache.set(
-              this.CACHE_KEY(this.chainId, address),
+              this.CACHE_KEY(address),
               tokenPropertiesResult,
               this.negativeCacheEntryTTL
             );

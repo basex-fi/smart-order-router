@@ -1,13 +1,13 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { BaseProvider } from '@ethersproject/providers';
-import { ChainId } from '@uniswap/sdk-core';
-import _ from 'lodash';
-import stats from 'stats-lite';
+import { BigNumber } from "@ethersproject/bignumber";
+import { BaseProvider } from "@ethersproject/providers";
+import _ from "lodash";
+import stats from "stats-lite";
 
-import { UniswapInterfaceMulticall } from '../types/v3/UniswapInterfaceMulticall';
-import { UniswapInterfaceMulticall__factory } from '../types/v3/factories/UniswapInterfaceMulticall__factory';
-import { UNISWAP_MULTICALL_ADDRESSES } from '../util/addresses';
-import { log } from '../util/log';
+import { MULTICALL_ADDRESS } from "@basex-fi/sdk-core";
+
+import { UniswapInterfaceMulticall } from "../types/v3/UniswapInterfaceMulticall";
+import { UniswapInterfaceMulticall__factory } from "../types/v3/factories/UniswapInterfaceMulticall__factory";
+import { log } from "../util/log";
 
 import {
   CallMultipleFunctionsOnSameContractParams,
@@ -15,7 +15,7 @@ import {
   CallSameFunctionOnMultipleContractsParams,
   IMulticallProvider,
   Result,
-} from './multicall-provider';
+} from "./multicall-provider";
 
 export type UniswapMulticallConfig = {
   gasLimitPerCallOverride?: number;
@@ -34,17 +34,14 @@ export class UniswapMulticallProvider extends IMulticallProvider<UniswapMultical
   private multicallContract: UniswapInterfaceMulticall;
 
   constructor(
-    protected chainId: ChainId,
     protected provider: BaseProvider,
     protected gasLimitPerCall = 1_000_000
   ) {
     super();
-    const multicallAddress = UNISWAP_MULTICALL_ADDRESSES[this.chainId];
+    const multicallAddress = MULTICALL_ADDRESS;
 
     if (!multicallAddress) {
-      throw new Error(
-        `No address for Uniswap Multicall Contract on chain id: ${chainId}`
-      );
+      throw new Error(`No address for Uniswap Multicall Contract`);
     }
 
     this.multicallContract = UniswapInterfaceMulticall__factory.connect(
@@ -280,8 +277,7 @@ export class UniswapMulticallProvider extends IMulticallProvider<UniswapMultical
       if (!success || returnData.length <= 2) {
         log.debug(
           { result: aggregateResults[i] },
-          `Invalid result calling ${functionNames[i]} with ${
-            functionParams ? functionParams[i] : '0'
+          `Invalid result calling ${functionNames[i]} with ${functionParams ? functionParams[i] : "0"
           } params`
         );
         results.push({
@@ -304,10 +300,8 @@ export class UniswapMulticallProvider extends IMulticallProvider<UniswapMultical
 
     log.debug(
       { results, functionNames, address },
-      `Results for multicall for ${
-        functionNames.length
-      } functions at address ${address} with ${
-        functionParams ? functionParams.length : ' 0'
+      `Results for multicall for ${functionNames.length
+      } functions at address ${address} with ${functionParams ? functionParams.length : " 0"
       } different sets of params. Results as of block ${blockNumber}`
     );
     return {

@@ -1,14 +1,13 @@
-import { Protocol } from '@uniswap/router-sdk';
-import { ChainId, Token, TradeType } from '@uniswap/sdk-core';
-import _ from 'lodash';
+import { Protocol } from "@basex-fi/router-sdk";
+import { Token, TradeType } from "@basex-fi/sdk-core";
+import _ from "lodash";
 
-import { MixedRoute, RouteWithValidQuote, V2Route, V3Route } from '../../../../routers';
+import { RouteWithValidQuote, V3Route } from "../../../../routers";
 
-import { CachedRoute } from './cached-route';
+import { CachedRoute } from "./cached-route";
 
 interface CachedRoutesParams {
-  routes: CachedRoute<V3Route | V2Route | MixedRoute>[];
-  chainId: ChainId;
+  routes: CachedRoute<V3Route>[];
   tokenIn: Token;
   tokenOut: Token;
   protocolsCovered: Protocol[];
@@ -25,8 +24,7 @@ interface CachedRoutesParams {
  * @class CachedRoute
  */
 export class CachedRoutes {
-  public readonly routes: CachedRoute<V3Route | V2Route | MixedRoute>[];
-  public readonly chainId: ChainId;
+  public readonly routes: CachedRoute<V3Route>[];
   public readonly tokenIn: Token;
   public readonly tokenOut: Token;
   public readonly protocolsCovered: Protocol[];
@@ -47,21 +45,19 @@ export class CachedRoutes {
    * @param originalAmount
    * @param blocksToLive
    */
-  constructor(
-    {
-      routes,
-      chainId,
-      tokenIn,
-      tokenOut,
-      protocolsCovered,
-      blockNumber,
-      tradeType,
-      originalAmount,
-      blocksToLive = 0
-    }: CachedRoutesParams
-  ) {
+  constructor({
+    routes,
+
+    tokenIn,
+    tokenOut,
+    protocolsCovered,
+    blockNumber,
+    tradeType,
+    originalAmount,
+    blocksToLive = 0,
+  }: CachedRoutesParams) {
     this.routes = routes;
-    this.chainId = chainId;
+
     this.tokenIn = tokenIn;
     this.tokenOut = tokenOut;
     this.protocolsCovered = protocolsCovered;
@@ -87,29 +83,31 @@ export class CachedRoutes {
    */
   public static fromRoutesWithValidQuotes(
     routes: RouteWithValidQuote[],
-    chainId: ChainId,
+
     tokenIn: Token,
     tokenOut: Token,
     protocolsCovered: Protocol[],
     blockNumber: number,
     tradeType: TradeType,
-    originalAmount: string,
+    originalAmount: string
   ): CachedRoutes | undefined {
     if (routes.length == 0) return undefined;
 
-    const cachedRoutes = _.map(routes, (route: RouteWithValidQuote) =>
-      new CachedRoute({ route: route.route, percent: route.percent })
+    const cachedRoutes = _.map(
+      routes,
+      (route: RouteWithValidQuote) =>
+        new CachedRoute({ route: route.route, percent: route.percent })
     );
 
     return new CachedRoutes({
       routes: cachedRoutes,
-      chainId,
+
       tokenIn,
       tokenOut,
       protocolsCovered,
       blockNumber,
       tradeType,
-      originalAmount
+      originalAmount,
     });
   }
 

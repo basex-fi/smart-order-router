@@ -1,6 +1,6 @@
-import { Fraction } from '@uniswap/sdk-core';
+import { Fraction } from "@basex-fi/sdk-core";
 
-import { CurrencyAmount } from '../../../util/amounts';
+import { CurrencyAmount } from "../../../util/amounts";
 
 export function calculateRatioAmountIn(
   optimalRatio: Fraction,
@@ -15,7 +15,7 @@ export function calculateRatioAmountIn(
 
   if (amountToSwapRaw.lessThan(0)) {
     // should never happen since we do checks before calling in
-    throw new Error('routeToRatio: insufficient input token amount');
+    throw new Error("routeToRatio: insufficient input token amount");
   }
 
   return CurrencyAmount.fromRawAmount(

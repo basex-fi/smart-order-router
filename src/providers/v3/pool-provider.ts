@@ -1,15 +1,15 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { ChainId, Token } from '@uniswap/sdk-core';
-import { computePoolAddress, FeeAmount, Pool } from '@uniswap/v3-sdk';
-import retry, { Options as RetryOptions } from 'async-retry';
-import _ from 'lodash';
+import { BigNumber } from "@ethersproject/bignumber";
+import { Token, computePoolAddress, FeeAmount, Pool, FACTORY_ADDRESS } from "@basex-fi/sdk-core";
 
-import { IUniswapV3PoolState__factory } from '../../types/v3/factories/IUniswapV3PoolState__factory';
-import { V3_CORE_FACTORY_ADDRESSES } from '../../util/addresses';
-import { log } from '../../util/log';
-import { poolToString } from '../../util/routes';
-import { IMulticallProvider, Result } from '../multicall-provider';
-import { ProviderConfig } from '../provider';
+import retry, { Options as RetryOptions } from "async-retry";
+import _ from "lodash";
+
+import { IUniswapV3PoolState__factory } from "../../types/v3/factories/IUniswapV3PoolState__factory";
+
+import { log } from "../../util/log";
+import { poolToString } from "../../util/routes";
+import { IMulticallProvider, Result } from "../multicall-provider";
+import { ProviderConfig } from "../provider";
 
 type ISlot0 = {
   sqrtPriceX96: BigNumber;
@@ -81,14 +81,13 @@ export class V3PoolProvider implements IV3PoolProvider {
    * @param retryOptions The retry options for each call to the multicall.
    */
   constructor(
-    protected chainId: ChainId,
     protected multicall2Provider: IMulticallProvider,
     protected retryOptions: V3PoolRetryOptions = {
       retries: 2,
       minTimeout: 50,
       maxTimeout: 500,
     }
-  ) {}
+  ) { }
 
   public async getPools(
     tokenPairs: [Token, Token, FeeAmount][],
@@ -121,19 +120,18 @@ export class V3PoolProvider implements IV3PoolProvider {
     );
 
     const [slot0Results, liquidityResults] = await Promise.all([
-      this.getPoolsData<ISlot0>(sortedPoolAddresses, 'slot0', providerConfig),
+      this.getPoolsData<ISlot0>(sortedPoolAddresses, "slot0", providerConfig),
       this.getPoolsData<[ILiquidity]>(
         sortedPoolAddresses,
-        'liquidity',
+        "liquidity",
         providerConfig
       ),
     ]);
 
     log.info(
-      `Got liquidity and slot0s for ${poolAddressSet.size} pools ${
-        providerConfig?.blockNumber
-          ? `as of block: ${providerConfig?.blockNumber}.`
-          : ``
+      `Got liquidity and slot0s for ${poolAddressSet.size} pools ${providerConfig?.blockNumber
+        ? `as of block: ${providerConfig?.blockNumber}.`
+        : ``
       }`
     );
 
@@ -216,7 +214,7 @@ export class V3PoolProvider implements IV3PoolProvider {
       ? [tokenA, tokenB]
       : [tokenB, tokenA];
 
-    const cacheKey = `${this.chainId}/${token0.address}/${token1.address}/${feeAmount}`;
+    const cacheKey = `${token0.address}/${token1.address}/${feeAmount}`;
 
     const cachedAddress = this.POOL_ADDRESS_CACHE[cacheKey];
 
@@ -225,7 +223,7 @@ export class V3PoolProvider implements IV3PoolProvider {
     }
 
     const poolAddress = computePoolAddress({
-      factoryAddress: V3_CORE_FACTORY_ADDRESSES[this.chainId]!,
+      factoryAddress: FACTORY_ADDRESS!,
       tokenA: token0,
       tokenB: token1,
       fee: feeAmount,

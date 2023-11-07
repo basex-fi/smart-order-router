@@ -1,10 +1,8 @@
-import { Token } from '@uniswap/sdk-core';
-import { Pair } from '@uniswap/v2-sdk';
-import { Pool } from '@uniswap/v3-sdk';
+import { Token, Pool } from "@basex-fi/sdk-core";
 
-import { log } from '../../../util/log';
-import { poolToString, routeToString } from '../../../util/routes';
-import { MixedRoute, V2Route, V3Route } from '../../router';
+import { log } from "../../../util/log";
+import { poolToString, routeToString } from "../../../util/routes";
+import { V3Route } from "../../router";
 
 export function computeAllV3Routes(
   tokenIn: Token,
@@ -23,51 +21,7 @@ export function computeAllV3Routes(
   );
 }
 
-export function computeAllV2Routes(
-  tokenIn: Token,
-  tokenOut: Token,
-  pools: Pair[],
-  maxHops: number
-): V2Route[] {
-  return computeAllRoutes<Pair, V2Route>(
-    tokenIn,
-    tokenOut,
-    (route: Pair[], tokenIn: Token, tokenOut: Token) => {
-      return new V2Route(route, tokenIn, tokenOut);
-    },
-    pools,
-    maxHops
-  );
-}
-
-export function computeAllMixedRoutes(
-  tokenIn: Token,
-  tokenOut: Token,
-  parts: (Pool | Pair)[],
-  maxHops: number
-): MixedRoute[] {
-  const routesRaw = computeAllRoutes<Pool | Pair, MixedRoute>(
-    tokenIn,
-    tokenOut,
-    (route: (Pool | Pair)[], tokenIn: Token, tokenOut: Token) => {
-      return new MixedRoute(route, tokenIn, tokenOut);
-    },
-    parts,
-    maxHops
-  );
-  /// filter out pure v3 and v2 routes
-  return routesRaw.filter((route) => {
-    return (
-      !route.pools.every((pool) => pool instanceof Pool) &&
-      !route.pools.every((pool) => pool instanceof Pair)
-    );
-  });
-}
-
-export function computeAllRoutes<
-  TPool extends Pair | Pool,
-  TRoute extends V3Route | V2Route | MixedRoute
->(
+export function computeAllRoutes<TPool extends Pool, TRoute extends V3Route>(
   tokenIn: Token,
   tokenOut: Token,
   buildRoute: (route: TPool[], tokenIn: Token, tokenOut: Token) => TRoute,
@@ -134,7 +88,13 @@ export function computeAllRoutes<
     }
   };
 
-  computeRoutes(tokenIn, tokenOut, [], poolsUsed, new Set([tokenIn.address.toLowerCase()]));
+  computeRoutes(
+    tokenIn,
+    tokenOut,
+    [],
+    poolsUsed,
+    new Set([tokenIn.address.toLowerCase()])
+  );
 
   log.info(
     {

@@ -1,17 +1,12 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { BaseProvider } from '@ethersproject/providers';
-import { ChainId } from '@uniswap/sdk-core';
+import { BigNumber } from "@ethersproject/bignumber";
+import { BaseProvider } from "@ethersproject/providers";
 
-import { TokenFeeDetector__factory } from '../types/other/factories/TokenFeeDetector__factory';
-import { TokenFeeDetector } from '../types/other/TokenFeeDetector';
-import {
-  log,
-  metric,
-  MetricLoggerUnit,
-  WRAPPED_NATIVE_CURRENCY,
-} from '../util';
+import { WETH_ADDRESS } from "@basex-fi/sdk-core";
+import { TokenFeeDetector__factory } from "../types/other/factories/TokenFeeDetector__factory";
+import { TokenFeeDetector } from "../types/other/TokenFeeDetector";
+import { log, metric, MetricLoggerUnit } from "../util";
 
-import { ProviderConfig } from './provider';
+import { ProviderConfig } from "./provider";
 
 const DEFAULT_TOKEN_BUY_FEE_BPS = BigNumber.from(0);
 const DEFAULT_TOKEN_SELL_FEE_BPS = BigNumber.from(0);
@@ -31,19 +26,13 @@ export type TokenFeeResult = {
 export type TokenFeeMap = Record<Address, TokenFeeResult>;
 
 // address at which the FeeDetector lens is deployed
-const FEE_DETECTOR_ADDRESS = (chainId: ChainId) => {
-  switch (chainId) {
-    case ChainId.MAINNET:
-    default:
-      return '0x19C97dc2a25845C7f9d1d519c8C2d4809c58b43f';
-  }
-};
+const FEE_DETECTOR_ADDRESS = "0x19C97dc2a25845C7f9d1d519c8C2d4809c58b43f";
 
 // Amount has to be big enough to avoid rounding errors, but small enough that
 // most v2 pools will have at least this many token units
 // 100000 is the smallest number that avoids rounding errors in bps terms
 // 10000 was not sufficient due to rounding errors for rebase token (e.g. stETH)
-const AMOUNT_TO_FLASH_BORROW = '100000';
+const AMOUNT_TO_FLASH_BORROW = "100000";
 // 1M gas limit per validate call, should cover most swap cases
 const GAS_LIMIT_PER_VALIDATE = 1_000_000;
 
@@ -59,13 +48,12 @@ export class OnChainTokenFeeFetcher implements ITokenFeeFetcher {
   private readonly contract: TokenFeeDetector;
 
   constructor(
-    private chainId: ChainId,
     rpcProvider: BaseProvider,
-    private tokenFeeAddress = FEE_DETECTOR_ADDRESS(chainId),
+    private tokenFeeAddress = FEE_DETECTOR_ADDRESS,
     private gasLimitPerCall = GAS_LIMIT_PER_VALIDATE,
     private amountToFlashBorrow = AMOUNT_TO_FLASH_BORROW
   ) {
-    this.BASE_TOKEN = WRAPPED_NATIVE_CURRENCY[this.chainId]?.address;
+    this.BASE_TOKEN = WETH_ADDRESS;
     this.contract = TokenFeeDetector__factory.connect(
       this.tokenFeeAddress,
       rpcProvider
@@ -103,7 +91,7 @@ export class OnChainTokenFeeFetcher implements ITokenFeeFetcher {
           );
 
           metric.putMetric(
-            'TokenFeeFetcherFetchFeesSuccess',
+            "TokenFeeFetcherFetchFeesSuccess",
             1,
             MetricLoggerUnit.Count
           );
@@ -116,7 +104,7 @@ export class OnChainTokenFeeFetcher implements ITokenFeeFetcher {
           );
 
           metric.putMetric(
-            'TokenFeeFetcherFetchFeesFailure',
+            "TokenFeeFetcherFetchFeesFailure",
             1,
             MetricLoggerUnit.Count
           );

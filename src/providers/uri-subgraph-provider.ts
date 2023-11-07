@@ -1,12 +1,10 @@
-import { ChainId } from '@uniswap/sdk-core';
-import retry from 'async-retry';
-import Timeout from 'await-timeout';
-import axios from 'axios';
+import retry from "async-retry";
+import Timeout from "await-timeout";
+import axios from "axios";
 
-import { log } from '../util/log';
+import { log } from "../util/log";
 
-import { V2SubgraphPool } from './v2/subgraph-provider';
-import { V3SubgraphPool } from './v3/subgraph-provider';
+import { V3SubgraphPool } from "./v3/subgraph-provider";
 
 /**
  * Gets subgraph pools from a URI. The URI shoudl contain a JSON
@@ -17,15 +15,12 @@ import { V3SubgraphPool } from './v3/subgraph-provider';
  * @class URISubgraphProvider
  * @template TSubgraphPool
  */
-export class URISubgraphProvider<
-  TSubgraphPool extends V2SubgraphPool | V3SubgraphPool
-> {
+export class URISubgraphProvider<TSubgraphPool extends V3SubgraphPool> {
   constructor(
-    private chainId: ChainId,
     private uri: string,
     private timeout = 6000,
     private retries = 2
-  ) {}
+  ) { }
 
   public async getPools(): Promise<TSubgraphPool[]> {
     log.info(
@@ -67,7 +62,7 @@ export class URISubgraphProvider<
         const pools = poolsBuffer as TSubgraphPool[];
 
         log.info(
-          { uri: this.uri, chain: this.chainId },
+          { uri: this.uri },
           `Got subgraph pools from uri. Num: ${pools.length}`
         );
 

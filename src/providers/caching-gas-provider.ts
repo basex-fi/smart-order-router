@@ -1,9 +1,7 @@
-import { ChainId } from '@uniswap/sdk-core';
+import { log } from "../util/log";
 
-import { log } from '../util/log';
-
-import { ICache } from './cache';
-import { GasPrice, IGasPriceProvider } from './gas-price-provider';
+import { ICache } from "./cache";
+import { GasPrice, IGasPriceProvider } from "./gas-price-provider";
 
 /**
  * Provider for getting gas price, with functionality for caching the results.
@@ -12,7 +10,7 @@ import { GasPrice, IGasPriceProvider } from './gas-price-provider';
  * @class CachingV3SubgraphProvider
  */
 export class CachingGasStationProvider implements IGasPriceProvider {
-  private GAS_KEY = (chainId: ChainId) => `gasPrice-${chainId}`;
+  private GAS_KEY = () => `gasPrice`;
 
   /**
    * Creates an instance of CachingGasStationProvider.
@@ -21,13 +19,12 @@ export class CachingGasStationProvider implements IGasPriceProvider {
    * @param cache Cache instance to hold cached pools.
    */
   constructor(
-    protected chainId: ChainId,
     private gasPriceProvider: IGasPriceProvider,
     private cache: ICache<GasPrice>
-  ) {}
+  ) { }
 
   public async getGasPrice(): Promise<GasPrice> {
-    const cachedGasPrice = await this.cache.get(this.GAS_KEY(this.chainId));
+    const cachedGasPrice = await this.cache.get(this.GAS_KEY());
 
     if (cachedGasPrice) {
       log.info(
@@ -38,9 +35,9 @@ export class CachingGasStationProvider implements IGasPriceProvider {
       return cachedGasPrice;
     }
 
-    log.info('Gas station price local cache miss.');
+    log.info("Gas station price local cache miss.");
     const gasPrice = await this.gasPriceProvider.getGasPrice();
-    await this.cache.set(this.GAS_KEY(this.chainId), gasPrice);
+    await this.cache.set(this.GAS_KEY(), gasPrice);
 
     return gasPrice;
   }

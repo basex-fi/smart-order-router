@@ -1,39 +1,30 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import {
   CondensedAddLiquidityOptions,
-  MixedRouteSDK,
   Protocol,
   Trade,
-} from '@uniswap/router-sdk';
+
+} from "@basex-fi/router-sdk";
+
 import {
   Currency,
   Fraction,
   Percent,
+  Position,
   Token,
   TradeType,
-} from '@uniswap/sdk-core';
-import { SwapOptions as UniversalRouterSwapOptions } from '@uniswap/universal-router-sdk';
-import { Route as V2RouteRaw } from '@uniswap/v2-sdk';
-import {
   Pool,
-  Position,
   MethodParameters as SDKMethodParameters,
   Route as V3RouteRaw,
-} from '@uniswap/v3-sdk';
+} from "@basex-fi/sdk-core";
+import { BigNumber } from "@ethersproject/bignumber";
 
-import { SimulationStatus } from '../providers';
-import { CurrencyAmount } from '../util/amounts';
+import { SimulationStatus } from "../providers";
+import { CurrencyAmount } from "../util/amounts";
 
-import { RouteWithValidQuote } from './alpha-router';
+import { RouteWithValidQuote } from "./alpha-router";
 
 export class V3Route extends V3RouteRaw<Token, Token> {
   protocol: Protocol.V3 = Protocol.V3;
-}
-export class V2Route extends V2RouteRaw<Token, Token> {
-  protocol: Protocol.V2 = Protocol.V2;
-}
-export class MixedRoute extends MixedRouteSDK<Token, Token> {
-  protocol: Protocol.MIXED = Protocol.MIXED;
 }
 
 export type SwapRoute = {
@@ -145,12 +136,6 @@ export enum SwapType {
   SWAP_ROUTER_02,
 }
 
-// Swap options for Universal Router and Permit2.
-export type SwapOptionsUniversalRouter = UniversalRouterSwapOptions & {
-  type: SwapType.UNIVERSAL_ROUTER;
-  simulate?: { fromAddress: string };
-};
-
 // Swap options for router-sdk and SwapRouter02.
 export type SwapOptionsSwapRouter02 = {
   type: SwapType.SWAP_ROUTER_02;
@@ -164,17 +149,17 @@ export type SwapOptionsSwapRouter02 = {
     s: string;
   } & (
     | {
-        amount: string;
-        deadline: string;
-      }
+      amount: string;
+      deadline: string;
+    }
     | {
-        nonce: string;
-        expiry: string;
-      }
+      nonce: string;
+      expiry: string;
+    }
   );
 };
 
-export type SwapOptions = SwapOptionsUniversalRouter | SwapOptionsSwapRouter02;
+export type SwapOptions = SwapOptionsSwapRouter02;
 
 // Config passed in to determine configurations on acceptable liquidity
 // to add to a position and max iterations on the route-finding algorithm

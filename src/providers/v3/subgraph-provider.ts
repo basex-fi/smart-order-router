@@ -1,12 +1,11 @@
-import { ChainId, Token } from '@uniswap/sdk-core';
-import retry from 'async-retry';
-import Timeout from 'await-timeout';
-import { gql, GraphQLClient } from 'graphql-request';
-import _ from 'lodash';
+import { Token } from "@basex-fi/sdk-core";
+import retry from "async-retry";
+import Timeout from "await-timeout";
+import { gql, GraphQLClient } from "graphql-request";
+import _ from "lodash";
 
-import { log } from '../../util';
-import { ProviderConfig } from '../provider';
-import { V2SubgraphPool } from '../v2/subgraph-provider';
+import { log } from "../../util";
+import { ProviderConfig } from "../provider";
 
 export interface V3SubgraphPool {
   id: string;
@@ -41,29 +40,8 @@ type RawV3SubgraphPool = {
 export const printV3SubgraphPool = (s: V3SubgraphPool) =>
   `${s.token0.id}/${s.token1.id}/${s.feeTier}`;
 
-export const printV2SubgraphPool = (s: V2SubgraphPool) =>
-  `${s.token0.id}/${s.token1.id}`;
-
-const SUBGRAPH_URL_BY_CHAIN: { [chainId in ChainId]?: string } = {
-  [ChainId.MAINNET]:
-    'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
-  [ChainId.OPTIMISM]:
-    'https://api.thegraph.com/subgraphs/name/ianlapham/optimism-post-regenesis',
-  [ChainId.ARBITRUM_ONE]:
-    'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-minimal',
-  [ChainId.POLYGON]:
-    'https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon',
-  [ChainId.CELO]:
-    'https://api.thegraph.com/subgraphs/name/jesse-sawa/uniswap-celo',
-  [ChainId.GOERLI]:
-    'https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-gorli',
-  [ChainId.BNB]:
-    'https://api.thegraph.com/subgraphs/name/ilyamk/uniswap-v3---bnb-chain',
-  [ChainId.AVALANCHE]:
-    'https://api.thegraph.com/subgraphs/name/lynnshaoyu/uniswap-v3-avax',
-  [ChainId.BASE]: 
-    'https://api.studio.thegraph.com/query/48211/uniswap-v3-base/version/latest',
-};
+const SUBGRAPH_URL =
+  "https://api.studio.thegraph.com/query/48211/uniswap-v3-base/version/latest";
 
 const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
 
@@ -85,14 +63,13 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
   private client: GraphQLClient;
 
   constructor(
-    private chainId: ChainId,
     private retries = 2,
     private timeout = 30000,
     private rollback = true
   ) {
-    const subgraphUrl = SUBGRAPH_URL_BY_CHAIN[this.chainId];
+    const subgraphUrl = SUBGRAPH_URL;
     if (!subgraphUrl) {
-      throw new Error(`No subgraph url for chain id: ${this.chainId}`);
+      throw new Error(`No subgraph url`);
     }
     this.client = new GraphQLClient(subgraphUrl);
   }
@@ -133,10 +110,9 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
     let pools: RawV3SubgraphPool[] = [];
 
     log.info(
-      `Getting V3 pools from the subgraph with page size ${PAGE_SIZE}${
-        providerConfig?.blockNumber
-          ? ` as of block ${providerConfig?.blockNumber}`
-          : ''
+      `Getting V3 pools from the subgraph with page size ${PAGE_SIZE}${providerConfig?.blockNumber
+        ? ` as of block ${providerConfig?.blockNumber}`
+        : ""
       }.`
     );
 
@@ -145,7 +121,7 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
         const timeout = new Timeout();
 
         const getPools = async (): Promise<RawV3SubgraphPool[]> => {
-          let lastId = '';
+          let lastId = "";
           let pools: RawV3SubgraphPool[] = [];
           let poolsPage: RawV3SubgraphPool[] = [];
 
@@ -190,7 +166,7 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
           if (
             this.rollback &&
             blockNumber &&
-            _.includes(err.message, 'indexed up to')
+            _.includes(err.message, "indexed up to")
           ) {
             blockNumber = blockNumber - 10;
             log.info(

@@ -1,23 +1,32 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { Protocol } from '@uniswap/router-sdk';
-import { ChainId, Currency, Token, TradeType } from '@uniswap/sdk-core';
-import { Pair } from '@uniswap/v2-sdk';
-import { Pool } from '@uniswap/v3-sdk';
-import _ from 'lodash';
+import { BigNumber } from "@ethersproject/bignumber";
+import { Protocol } from "@basex-fi/router-sdk";
+import { Currency, Token, TradeType, Pool } from "@basex-fi/sdk-core";
 
-import { ITokenListProvider, ITokenProvider, ITokenValidatorProvider, TokenValidationResult } from '../../../providers';
-import { CurrencyAmount, log, metric, MetricLoggerUnit, poolToString } from '../../../util';
-import { MixedRoute, V2Route, V3Route } from '../../router';
-import { AlphaRouterConfig } from '../alpha-router';
-import { RouteWithValidQuote } from '../entities/route-with-valid-quote';
+import _ from "lodash";
+
+import {
+  ITokenListProvider,
+  ITokenProvider,
+  ITokenValidatorProvider,
+  TokenValidationResult,
+} from "../../../providers";
+import {
+  CurrencyAmount,
+  log,
+  metric,
+  MetricLoggerUnit,
+  poolToString,
+} from "../../../util";
+import { V3Route } from "../../router";
+import { AlphaRouterConfig } from "../alpha-router";
+import { RouteWithValidQuote } from "../entities/route-with-valid-quote";
 import {
   CandidatePoolsBySelectionCriteria,
-  V2CandidatePools,
-  V3CandidatePools
-} from '../functions/get-candidate-pools';
-import { IGasModel } from '../gas-models';
+  V3CandidatePools,
+} from "../functions/get-candidate-pools";
+import { IGasModel } from "../gas-models";
 
-import { GetQuotesResult, GetRoutesResult } from './model/results';
+import { GetQuotesResult, GetRoutesResult } from "./model/results";
 
 /**
  * Interface for a Quoter.
@@ -28,24 +37,24 @@ import { GetQuotesResult, GetRoutesResult } from './model/results';
  * @template Route
  */
 export abstract class BaseQuoter<
-  CandidatePools extends V2CandidatePools | V3CandidatePools | [V3CandidatePools, V2CandidatePools],
-  Route extends V2Route | V3Route | MixedRoute
+  CandidatePools extends V3CandidatePools | [V3CandidatePools],
+  Route extends V3Route
 > {
   protected tokenProvider: ITokenProvider;
-  protected chainId: ChainId;
+
   protected protocol: Protocol;
   protected blockedTokenListProvider?: ITokenListProvider;
   protected tokenValidatorProvider?: ITokenValidatorProvider;
 
   constructor(
     tokenProvider: ITokenProvider,
-    chainId: ChainId,
+
     protocol: Protocol,
     blockedTokenListProvider?: ITokenListProvider,
     tokenValidatorProvider?: ITokenValidatorProvider
   ) {
     this.tokenProvider = tokenProvider;
-    this.chainId = chainId;
+
     this.protocol = protocol;
     this.blockedTokenListProvider = blockedTokenListProvider;
     this.tokenValidatorProvider = tokenValidatorProvider;
@@ -69,7 +78,7 @@ export abstract class BaseQuoter<
     candidatePools: CandidatePools,
     tradeType: TradeType,
     routingConfig: AlphaRouterConfig
-  ): Promise<GetRoutesResult<Route>>
+  ): Promise<GetRoutesResult<Route>>;
 
   /**
    * Public method that will fetch quotes for the combination of every route and every amount.
@@ -95,7 +104,7 @@ export abstract class BaseQuoter<
     candidatePools?: CandidatePoolsBySelectionCriteria,
     gasModel?: IGasModel<RouteWithValidQuote>,
     gasPriceWei?: BigNumber
-  ): Promise<GetQuotesResult>
+  ): Promise<GetQuotesResult>;
 
   /**
    * Public method which would first get the routes and then get the quotes.
@@ -124,43 +133,52 @@ export abstract class BaseQuoter<
     gasModel?: IGasModel<RouteWithValidQuote>,
     gasPriceWei?: BigNumber
   ): Promise<GetQuotesResult> {
-    return this.getRoutes(tokenIn, tokenOut, candidatePools, tradeType, routingConfig)
-      .then((routesResult) => {
-        if (routesResult.routes.length == 1) {
-          metric.putMetric(`${this.protocol}QuoterSingleRoute`, 1, MetricLoggerUnit.Count);
-          percents = [100];
-          amounts = [amount];
-        }
-
-        if (routesResult.routes.length > 0) {
-          metric.putMetric(
-            `${this.protocol}QuoterRoutesFound`,
-            routesResult.routes.length,
-            MetricLoggerUnit.Count
-          );
-        } else {
-          metric.putMetric(
-            `${this.protocol}QuoterNoRoutesFound`,
-            routesResult.routes.length,
-            MetricLoggerUnit.Count
-          );
-        }
-
-        return this.getQuotes(
-          routesResult.routes,
-          amounts,
-          percents,
-          quoteToken,
-          tradeType,
-          routingConfig,
-          routesResult.candidatePools,
-          gasModel,
-          gasPriceWei
+    return this.getRoutes(
+      tokenIn,
+      tokenOut,
+      candidatePools,
+      tradeType,
+      routingConfig
+    ).then((routesResult) => {
+      if (routesResult.routes.length == 1) {
+        metric.putMetric(
+          `${this.protocol}QuoterSingleRoute`,
+          1,
+          MetricLoggerUnit.Count
         );
-      });
+        percents = [100];
+        amounts = [amount];
+      }
+
+      if (routesResult.routes.length > 0) {
+        metric.putMetric(
+          `${this.protocol}QuoterRoutesFound`,
+          routesResult.routes.length,
+          MetricLoggerUnit.Count
+        );
+      } else {
+        metric.putMetric(
+          `${this.protocol}QuoterNoRoutesFound`,
+          routesResult.routes.length,
+          MetricLoggerUnit.Count
+        );
+      }
+
+      return this.getQuotes(
+        routesResult.routes,
+        amounts,
+        percents,
+        quoteToken,
+        tradeType,
+        routingConfig,
+        routesResult.candidatePools,
+        gasModel,
+        gasPriceWei
+      );
+    });
   }
 
-  protected async applyTokenValidatorToPools<T extends Pool | Pair>(
+  protected async applyTokenValidatorToPools<T extends Pool>(
     pools: T[],
     isInvalidFn: (
       token: Currency,
@@ -175,7 +193,8 @@ export abstract class BaseQuoter<
 
     const tokens = _.flatMap(pools, (pool) => [pool.token0, pool.token1]);
 
-    const tokenValidationResults = await this.tokenValidatorProvider.validateTokens(tokens);
+    const tokenValidationResults =
+      await this.tokenValidatorProvider.validateTokens(tokens);
 
     const poolsFiltered = _.filter(pools, (pool: T) => {
       const token0Validation = tokenValidationResults.getValidationByToken(

@@ -1,13 +1,37 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ChainId, Token } from '@uniswap/sdk-core';
-import { TokenInfo, TokenList } from '@uniswap/token-lists';
-import axios from 'axios';
+import { Token } from "@basex-fi/sdk-core";
+import axios from "axios";
 
-import { log } from '../util/log';
-import { metric, MetricLoggerUnit } from '../util/metric';
+import { log } from "../util/log";
+import { metric, MetricLoggerUnit } from "../util/metric";
 
-import { ICache } from './cache';
-import { ITokenProvider, TokenAccessor } from './token-provider';
+import { ICache } from "./cache";
+import { ITokenProvider, TokenAccessor } from "./token-provider";
+
+export interface Version {
+  readonly major: number;
+  readonly minor: number;
+  readonly patch: number;
+}
+
+export interface Tags {
+  readonly [tagId: string]: {
+    readonly name: string;
+    readonly description: string;
+  };
+}
+
+export interface TokenList {
+  readonly name: string;
+  readonly timestamp: string;
+  readonly version: Version;
+  readonly tokens: Token[];
+  readonly tokenMap?: {
+    readonly [key: string]: Token;
+  };
+  readonly keywords?: string[];
+  readonly tags?: Tags;
+  readonly logoURI?: string;
+}
 
 /**
  * Provider for getting token data from a Token List.
@@ -27,21 +51,12 @@ export interface ITokenListProvider {
 
 export class CachingTokenListProvider
   implements ITokenProvider, ITokenListProvider {
-  private CACHE_KEY = (tokenInfo: TokenInfo) =>
-    `token-list-token-${this.chainId}/${this.tokenList.name}/${
-      this.tokenList.timestamp
-    }/${this.tokenList.version}/${tokenInfo.address.toLowerCase()}/${
-      tokenInfo.decimals
-    }/${tokenInfo.symbol}/${tokenInfo.name}`;
+  private CACHE_KEY = (tokenInfo: Token) =>
+    `token-list-token/${this.tokenList.name}/${this.tokenList.timestamp}/${this.tokenList.version
+    }/${tokenInfo.address.toLowerCase()}/${tokenInfo.decimals}/${tokenInfo.symbol
+    }/${tokenInfo.name}`;
 
-  private chainId: ChainId;
-  private chainToTokenInfos: Map<string, TokenInfo[]>;
-  private chainSymbolToTokenInfo: Map<string, TokenInfo>;
-  private chainAddressToTokenInfo: Map<string, TokenInfo>;
   private tokenList: TokenList;
-
-  private CHAIN_SYMBOL_KEY = (chainId: ChainId, symbol: string) => `${chainId.toString()}/${symbol}`;
-  private CHAIN_ADDRESS_KEY = (chainId: ChainId, address: string) => `${chainId.toString()}/${address.toLowerCase()}`;
 
   /**
    * Creates an instance of CachingTokenListProvider.
@@ -51,36 +66,11 @@ export class CachingTokenListProvider
    * @param tokenList The token list to get the tokens from.
    * @param tokenCache Cache instance to hold cached tokens.
    */
-  constructor(
-    chainId: ChainId | number,
-    tokenList: TokenList,
-    private tokenCache: ICache<Token>
-  ) {
-    this.chainId = chainId;
+  constructor(tokenList: TokenList, private tokenCache: ICache<Token>) {
     this.tokenList = tokenList;
-
-    this.chainToTokenInfos = new Map();
-    this.chainSymbolToTokenInfo = new Map();
-    this.chainAddressToTokenInfo = new Map();
-
-    for (const tokenInfo of this.tokenList.tokens) {
-      const chainId = tokenInfo.chainId;
-      const chainIdString = chainId.toString();
-      const symbol = tokenInfo.symbol;
-      const address = tokenInfo.address.toLowerCase();
-
-      if (!this.chainToTokenInfos.has(chainIdString)) {
-        this.chainToTokenInfos.set(chainIdString, []);
-      }
-      this.chainToTokenInfos.get(chainIdString)!.push(tokenInfo);
-
-      this.chainSymbolToTokenInfo.set(this.CHAIN_SYMBOL_KEY(chainId, symbol), tokenInfo);
-      this.chainAddressToTokenInfo.set(this.CHAIN_ADDRESS_KEY(chainId, address), tokenInfo);
-    }
   }
 
   public static async fromTokenListURI(
-    chainId: ChainId | number,
     tokenListURI: string,
     tokenCache: ICache<Token>
   ) {
@@ -88,12 +78,12 @@ export class CachingTokenListProvider
     const tokenList = await this.buildTokenList(tokenListURI);
 
     metric.putMetric(
-      'TokenListLoad',
+      "TokenListLoad",
       Date.now() - now,
       MetricLoggerUnit.Milliseconds
     );
 
-    return new CachingTokenListProvider(chainId, tokenList, tokenCache);
+    return new CachingTokenListProvider(tokenList, tokenCache);
   }
 
   private static async buildTokenList(
@@ -118,20 +108,15 @@ export class CachingTokenListProvider
   }
 
   public static async fromTokenList(
-    chainId: ChainId | number,
     tokenList: TokenList,
     tokenCache: ICache<Token>
   ) {
     const now = Date.now();
 
-    const tokenProvider = new CachingTokenListProvider(
-      chainId,
-      tokenList,
-      tokenCache
-    );
+    const tokenProvider = new CachingTokenListProvider(tokenList, tokenCache);
 
     metric.putMetric(
-      'TokenListLoad',
+      "TokenListLoad",
       Date.now() - now,
       MetricLoggerUnit.Milliseconds
     );
@@ -164,7 +149,7 @@ export class CachingTokenListProvider
         addToken(token);
       }
     } else {
-      const chainTokens = this.chainToTokenInfos.get(this.chainId.toString()) ?? [];
+      const chainTokens = this.tokenList.tokens ?? [];
       for (const info of chainTokens) {
         const token = await this.buildToken(info);
         addToken(token);
@@ -174,7 +159,8 @@ export class CachingTokenListProvider
     return {
       getTokenByAddress: (address: string) =>
         addressToToken.get(address.toLowerCase()),
-      getTokenBySymbol: (symbol: string) => symbolToToken.get(symbol.toLowerCase()),
+      getTokenBySymbol: (symbol: string) =>
+        symbolToToken.get(symbol.toLowerCase()),
       getAllTokens: (): Token[] => {
         return Array.from(addressToToken.values());
       },
@@ -182,7 +168,7 @@ export class CachingTokenListProvider
   }
 
   public async hasTokenBySymbol(_symbol: string): Promise<boolean> {
-    return this.chainSymbolToTokenInfo.has(this.CHAIN_SYMBOL_KEY(this.chainId, _symbol));
+    return this.tokenList.tokens.some((t) => t.symbol === _symbol);
   }
 
   public async getTokenBySymbol(_symbol: string): Promise<Token | undefined> {
@@ -190,11 +176,11 @@ export class CachingTokenListProvider
 
     // We consider ETH as a regular ERC20 Token throughout this package. We don't use the NativeCurrency object from the sdk.
     // When we build the calldata for swapping we insert wrapping/unwrapping as needed.
-    if (_symbol == 'ETH') {
-      symbol = 'WETH';
+    if (_symbol == "ETH") {
+      symbol = "WETH";
     }
 
-    const tokenInfo = this.chainSymbolToTokenInfo.get(this.CHAIN_SYMBOL_KEY(this.chainId, symbol));
+    const tokenInfo = this.tokenList.tokens.find((t) => t.symbol === symbol);
 
     if (!tokenInfo) {
       return undefined;
@@ -206,11 +192,11 @@ export class CachingTokenListProvider
   }
 
   public async hasTokenByAddress(address: string): Promise<boolean> {
-    return this.chainAddressToTokenInfo.has(this.CHAIN_ADDRESS_KEY(this.chainId, address));
+    return this.tokenList.tokens.some((t) => t.address === address);
   }
 
   public async getTokenByAddress(address: string): Promise<Token | undefined> {
-    const tokenInfo = this.chainAddressToTokenInfo.get(this.CHAIN_ADDRESS_KEY(this.chainId, address));
+    const tokenInfo = this.tokenList.tokens.find((t) => t.address === address);
 
     if (!tokenInfo) {
       return undefined;
@@ -221,7 +207,7 @@ export class CachingTokenListProvider
     return token;
   }
 
-  private async buildToken(tokenInfo: TokenInfo): Promise<Token> {
+  private async buildToken(tokenInfo: Token): Promise<Token> {
     const cacheKey = this.CACHE_KEY(tokenInfo);
     const cachedToken = await this.tokenCache.get(cacheKey);
 
@@ -230,11 +216,11 @@ export class CachingTokenListProvider
     }
 
     const token = new Token(
-      this.chainId,
       tokenInfo.address,
       tokenInfo.decimals,
       tokenInfo.symbol,
-      tokenInfo.name
+      tokenInfo.name || "",
+      `https://assets.smold.app/api/token/8453/${tokenInfo.address}`
     );
 
     await this.tokenCache.set(cacheKey, token);

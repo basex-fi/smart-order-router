@@ -1,9 +1,9 @@
-import { Token } from '@uniswap/sdk-core';
+import { Token } from "@basex-fi/sdk-core";
 
-import { log } from '../../util';
-import { ProviderConfig } from '../provider';
+import { log } from "../../util";
+import { ProviderConfig } from "../provider";
 
-import { IV3SubgraphProvider, V3SubgraphPool } from './subgraph-provider';
+import { IV3SubgraphProvider, V3SubgraphPool } from "./subgraph-provider";
 
 /**
  * Provider for getting V3 subgraph pools that falls back to a different provider
@@ -13,7 +13,7 @@ import { IV3SubgraphProvider, V3SubgraphPool } from './subgraph-provider';
  * @class V3SubgraphProviderWithFallBacks
  */
 export class V3SubgraphProviderWithFallBacks implements IV3SubgraphProvider {
-  constructor(private fallbacks: IV3SubgraphProvider[]) {}
+  constructor(private fallbacks: IV3SubgraphProvider[]) { }
 
   public async getPools(
     tokenIn?: Token,
@@ -34,6 +34,6 @@ export class V3SubgraphProviderWithFallBacks implements IV3SubgraphProvider {
       }
     }
 
-    throw new Error('Failed to get subgraph pools from any providers');
+    throw new Error("Failed to get subgraph pools from any providers");
   }
 }
