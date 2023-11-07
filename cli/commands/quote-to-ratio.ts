@@ -1,16 +1,21 @@
-import { Logger } from '@ethersproject/logger';
-import { flags } from '@oclif/command';
-import { Currency, Ether, Fraction, Percent } from '@uniswap/sdk-core';
-import { Position } from '@uniswap/v3-sdk';
-import dotenv from 'dotenv';
+import { Logger } from "@ethersproject/logger";
+import { flags } from "@oclif/command";
 import {
-  ID_TO_CHAIN_ID,
+  Currency,
+  Ether,
+  Fraction,
+  Percent,
+  Position,
+} from "@basex-fi/sdk-core";
+
+import dotenv from "dotenv";
+import {
   parseAmount,
   SwapToRatioResponse,
   SwapToRatioStatus,
   SwapType,
-} from '../../src';
-import { BaseCommand } from '../base-command';
+} from "../../src";
+import { BaseCommand } from "../base-command";
 
 dotenv.config();
 
@@ -18,15 +23,15 @@ Logger.globalLogger();
 Logger.setLogLevel(Logger.levels.DEBUG);
 
 export class QuoteToRatio extends BaseCommand {
-  static description = 'Uniswap Smart Order Router CLI';
+  static description = "Uniswap Smart Order Router CLI";
 
   static flags = {
     ...BaseCommand.flags,
-    version: flags.version({ char: 'v' }),
-    help: flags.help({ char: 'h' }),
-    token0: flags.string({ char: 'i', required: true }),
-    token1: flags.string({ char: 'o', required: true }),
-    feeAmount: flags.integer({ char: 'f', required: true }),
+    version: flags.version({ char: "v" }),
+    help: flags.help({ char: "h" }),
+    token0: flags.string({ char: "i", required: true }),
+    token1: flags.string({ char: "o", required: true }),
+    feeAmount: flags.integer({ char: "f", required: true }),
     token0Balance: flags.string({ required: true }),
     token1Balance: flags.string({ required: true }),
     recipient: flags.string({ required: true }),
@@ -37,7 +42,6 @@ export class QuoteToRatio extends BaseCommand {
   async run() {
     const { flags } = this.parse(QuoteToRatio);
     const {
-      chainId: chainIdNumb,
       token0: token0Str,
       token1: token1Str,
       token0Balance: token0BalanceStr,
@@ -65,15 +69,14 @@ export class QuoteToRatio extends BaseCommand {
 
     const tokenAccessor = await tokenProvider.getTokens([token0Str, token1Str]);
 
-    const chainId = ID_TO_CHAIN_ID(chainIdNumb);
     // TODO add support for polygon
     const token0: Currency =
-      token0Str == 'ETH'
-        ? Ether.onChain(chainId)
+      token0Str == "ETH"
+        ? new Ether()
         : tokenAccessor.getTokenByAddress(token0Str)!;
     const token1: Currency =
-      token1Str == 'ETH'
-        ? Ether.onChain(chainId)
+      token1Str == "ETH"
+        ? new Ether()
         : tokenAccessor.getTokenByAddress(token1Str)!;
 
     const token0Balance = parseAmount(token0BalanceStr, token0);
@@ -91,8 +94,7 @@ export class QuoteToRatio extends BaseCommand {
     );
     if (!pool) {
       log.error(
-        `Could not find pool. ${
-          debug ? '' : 'Run in debug mode for more info'
+        `Could not find pool. ${debug ? "" : "Run in debug mode for more info"
         }.`
       );
       return;
@@ -116,7 +118,7 @@ export class QuoteToRatio extends BaseCommand {
       },
       {
         addLiquidityOptions: {
-          recipient: '0x0000000000000000000000000000000000000001',
+          recipient: "0x0000000000000000000000000000000000000001",
         },
         swapOptions: {
           type: SwapType.SWAP_ROUTER_02,
@@ -167,14 +169,13 @@ export class QuoteToRatio extends BaseCommand {
       return;
     } else if (swapRoutes.status === SwapToRatioStatus.NO_ROUTE_FOUND) {
       log.error(
-        `${swapRoutes.error}. ${
-          debug ? '' : 'Run in debug mode for more info'
+        `${swapRoutes.error}. ${debug ? "" : "Run in debug mode for more info"
         }.`
       );
       return;
     } else if (swapRoutes.status === SwapToRatioStatus.NO_SWAP_NEEDED) {
       log.error(
-        `no swap needed. ${debug ? '' : 'Run in debug mode for more info'}.`
+        `no swap needed. ${debug ? "" : "Run in debug mode for more info"}.`
       );
       return;
     }

@@ -2,7 +2,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { BaseProvider, JsonRpcProvider } from "@ethersproject/providers";
 
 import { Protocol, SwapRouter, Trade } from "@basex-fi/router-sdk";
-import { DEFAULT_TOKENS } from "../../util/default-tokens";
+
 import {
   Pool,
   Position,
@@ -11,7 +11,9 @@ import {
   Currency,
   Fraction,
   Token,
+  TokenList,
   TradeType,
+  DEFAULT_TOKEN_LIST,
   SWAP_ROUTER_02_ADDRESS,
 } from "@basex-fi/sdk-core";
 import retry from "async-retry";
@@ -69,7 +71,7 @@ import {
 } from "../../providers/v3/pool-provider";
 import { IV3SubgraphProvider } from "../../providers/v3/subgraph-provider";
 import { Erc20__factory } from "../../types/other/factories/Erc20__factory";
-import { WRAPPED_NATIVE_CURRENCY } from "../../util";
+import { WRAPPED_NATIVE_CURRENCY, TO_NETWORK_NAME } from "../../util";
 import { CurrencyAmount } from "../../util/amounts";
 
 import {
@@ -118,8 +120,6 @@ import {
 
 import { NATIVE_OVERHEAD } from "./gas-models/v3/gas-costs";
 import { GetQuotesResult, V3Quoter } from "./quoters";
-
-import { TokenList } from "../../providers/caching-token-list-provider";
 
 export type AlphaRouterParams = {
   /**
@@ -453,13 +453,13 @@ export class AlphaRouter
       new CachingTokenProviderWithFallback(
         new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false })),
         new CachingTokenListProvider(
-          DEFAULT_TOKENS,
+          DEFAULT_TOKEN_LIST,
           new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false }))
         ),
         new TokenProvider(this.multicall2Provider)
       );
 
-    const chainName = "base-mainnet";
+    const chainName = TO_NETWORK_NAME();
 
     if (v3SubgraphProvider) {
       this.v3SubgraphProvider = v3SubgraphProvider;

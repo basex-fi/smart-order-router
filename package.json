@@ -29,8 +29,8 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@basex-fi/router-sdk": "^1.0.2",
-    "@basex-fi/sdk-core": "^1.1.0",
+    "@basex-fi/router-sdk": "^1.0.5",
+    "@basex-fi/sdk-core": "^1.1.3",
     "@basex-fi/swap-router-contracts": "^1.3.2",
     "@basex-fi/v3-core": "^1.0.3",
     "async-retry": "^1.3.1",

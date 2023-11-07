@@ -11,7 +11,7 @@ export enum NativeCurrencyName {
   AVALANCHE = "AVAX",
 }
 
-export const NATIVE_NAMES_BY_ID: string[] = [
+export const NATIVE_NAMES: string[] = [
   "ETH",
   "ETHER",
   "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -19,7 +19,9 @@ export const NATIVE_NAMES_BY_ID: string[] = [
 
 export const NATIVE_CURRENCY = NativeCurrencyName.ETHER;
 
-export const TO_PROVIDER = (): string => process.env.JSON_RPC_PROVIDER_BASE!;
+export const TO_PROVIDER = (): string => process.env.JSON_RPC_PROVIDER!;
+
+export const TO_NETWORK_NAME = (): string => "base-mainnet";
 
 export const WRAPPED_NATIVE_CURRENCY: Token = new Token(
   "0x4200000000000000000000000000000000000006",

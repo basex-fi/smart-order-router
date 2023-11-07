@@ -1,4 +1,4 @@
-import { Token } from "@basex-fi/sdk-core";
+import { Token, TokenInfo, TokenList } from "@basex-fi/sdk-core";
 import axios from "axios";
 
 import { log } from "../util/log";
@@ -6,32 +6,6 @@ import { metric, MetricLoggerUnit } from "../util/metric";
 
 import { ICache } from "./cache";
 import { ITokenProvider, TokenAccessor } from "./token-provider";
-
-export interface Version {
-  readonly major: number;
-  readonly minor: number;
-  readonly patch: number;
-}
-
-export interface Tags {
-  readonly [tagId: string]: {
-    readonly name: string;
-    readonly description: string;
-  };
-}
-
-export interface TokenList {
-  readonly name: string;
-  readonly timestamp: string;
-  readonly version: Version;
-  readonly tokens: Token[];
-  readonly tokenMap?: {
-    readonly [key: string]: Token;
-  };
-  readonly keywords?: string[];
-  readonly tags?: Tags;
-  readonly logoURI?: string;
-}
 
 /**
  * Provider for getting token data from a Token List.
@@ -51,7 +25,7 @@ export interface ITokenListProvider {
 
 export class CachingTokenListProvider
   implements ITokenProvider, ITokenListProvider {
-  private CACHE_KEY = (tokenInfo: Token) =>
+  private CACHE_KEY = (tokenInfo: TokenInfo) =>
     `token-list-token/${this.tokenList.name}/${this.tokenList.timestamp}/${this.tokenList.version
     }/${tokenInfo.address.toLowerCase()}/${tokenInfo.decimals}/${tokenInfo.symbol
     }/${tokenInfo.name}`;
@@ -207,7 +181,7 @@ export class CachingTokenListProvider
     return token;
   }
 
-  private async buildToken(tokenInfo: Token): Promise<Token> {
+  private async buildToken(tokenInfo: TokenInfo): Promise<Token> {
     const cacheKey = this.CACHE_KEY(tokenInfo);
     const cachedToken = await this.tokenCache.get(cacheKey);
 

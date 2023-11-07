@@ -1,13 +1,18 @@
-import { Logger } from '@ethersproject/logger';
-import { flags } from '@oclif/command';
-import { Protocol } from '@uniswap/router-sdk';
-import { Currency, Percent, TradeType } from '@uniswap/sdk-core';
-import dotenv from 'dotenv';
-import _ from 'lodash';
+import { Logger } from "@ethersproject/logger";
+import { flags } from "@oclif/command";
+import { Protocol } from "@basex-fi/router-sdk";
+import { Currency, Percent, TradeType, Ether } from "@basex-fi/sdk-core";
+import dotenv from "dotenv";
+import _ from "lodash";
 
-import { ID_TO_CHAIN_ID, MapWithLowerCaseKey, nativeOnChain, parseAmount, SwapRoute, SwapType, } from '../../src';
-import { NATIVE_NAMES_BY_ID, TO_PROTOCOL } from '../../src/util';
-import { BaseCommand } from '../base-command';
+import {
+  MapWithLowerCaseKey,
+  parseAmount,
+  SwapRoute,
+  SwapType,
+} from "../../src";
+import { NATIVE_NAMES, TO_PROTOCOL } from "../../src/util";
+import { BaseCommand } from "../base-command";
 
 dotenv.config();
 
@@ -15,16 +20,16 @@ Logger.globalLogger();
 Logger.setLogLevel(Logger.levels.DEBUG);
 
 export class Quote extends BaseCommand {
-  static description = 'Uniswap Smart Order Router CLI';
+  static description = "Uniswap Smart Order Router CLI";
 
   static flags = {
     ...BaseCommand.flags,
-    version: flags.version({ char: 'v' }),
-    help: flags.help({ char: 'h' }),
-    tokenIn: flags.string({ char: 'i', required: true }),
-    tokenOut: flags.string({ char: 'o', required: true }),
+    version: flags.version({ char: "v" }),
+    help: flags.help({ char: "h" }),
+    tokenIn: flags.string({ char: "i", required: true }),
+    tokenOut: flags.string({ char: "o", required: true }),
     recipient: flags.string({ required: false }),
-    amount: flags.string({ char: 'a', required: true }),
+    amount: flags.string({ char: "a", required: true }),
     exactIn: flags.boolean({ required: false }),
     exactOut: flags.boolean({ required: false }),
     protocols: flags.string({ required: false }),
@@ -35,7 +40,10 @@ export class Quote extends BaseCommand {
     }),
     simulate: flags.boolean({ required: false, default: false }),
     debugRouting: flags.boolean({ required: false, default: true }),
-    enableFeeOnTransferFeeFetching: flags.boolean({ required: false, default: false }),
+    enableFeeOnTransferFeeFetching: flags.boolean({
+      required: false,
+      default: false,
+    }),
   };
 
   async run() {
@@ -60,22 +68,22 @@ export class Quote extends BaseCommand {
       minSplits,
       maxSplits,
       distributionPercent,
-      chainId: chainIdNumb,
       protocols: protocolsStr,
       forceCrossProtocol,
       forceMixedRoutes,
       simulate,
       debugRouting,
-      enableFeeOnTransferFeeFetching
+      enableFeeOnTransferFeeFetching,
     } = flags;
 
     const topNSecondHopForTokenAddress = new MapWithLowerCaseKey();
-    topNSecondHopForTokenAddressRaw.split(',').forEach((entry) => {
-      if (entry != '') {
-        const entryParts = entry.split('|');
+    topNSecondHopForTokenAddressRaw.split(",").forEach((entry) => {
+      if (entry != "") {
+        const entryParts = entry.split("|");
         if (entryParts.length != 2) {
           throw new Error(
-            'flag --topNSecondHopForTokenAddressRaw must be in format tokenAddress|topN,...');
+            "flag --topNSecondHopForTokenAddressRaw must be in format tokenAddress|topN,..."
+          );
         }
         const topNForTokenAddress: number = Number(entryParts[1]!);
         topNSecondHopForTokenAddress.set(entryParts[0]!, topNForTokenAddress);
@@ -83,13 +91,13 @@ export class Quote extends BaseCommand {
     });
 
     if ((exactIn && exactOut) || (!exactIn && !exactOut)) {
-      throw new Error('Must set either --exactIn or --exactOut.');
+      throw new Error("Must set either --exactIn or --exactOut.");
     }
 
     let protocols: Protocol[] = [];
     if (protocolsStr) {
       try {
-        protocols = _.map(protocolsStr.split(','), (protocolStr) =>
+        protocols = _.map(protocolsStr.split(","), (protocolStr) =>
           TO_PROTOCOL(protocolStr)
         );
       } catch (err) {
@@ -99,23 +107,19 @@ export class Quote extends BaseCommand {
       }
     }
 
-    const chainId = ID_TO_CHAIN_ID(chainIdNumb);
-
     const log = this.logger;
     const tokenProvider = this.tokenProvider;
     const router = this.router;
 
     // if the tokenIn str is 'ETH' or 'MATIC' or in NATIVE_NAMES_BY_ID
-    const tokenIn: Currency = NATIVE_NAMES_BY_ID[chainId]!.includes(tokenInStr)
-      ? nativeOnChain(chainId)
+    const tokenIn: Currency = NATIVE_NAMES!.includes(tokenInStr)
+      ? new Ether()
       : (await tokenProvider.getTokens([tokenInStr])).getTokenByAddress(
         tokenInStr
       )!;
 
-    const tokenOut: Currency = NATIVE_NAMES_BY_ID[chainId]!.includes(
-      tokenOutStr
-    )
-      ? nativeOnChain(chainId)
+    const tokenOut: Currency = NATIVE_NAMES!.includes(tokenOutStr)
+      ? new Ether()
       : (await tokenProvider.getTokens([tokenOutStr])).getTokenByAddress(
         tokenOutStr
       )!;
@@ -127,15 +131,7 @@ export class Quote extends BaseCommand {
         amountIn,
         tokenOut,
         TradeType.EXACT_INPUT,
-        recipient
-          ? {
-            type: SwapType.UNIVERSAL_ROUTER,
-            deadlineOrPreviousBlockhash: 10000000000000,
-            recipient,
-            slippageTolerance: new Percent(5, 100),
-            simulate: simulate ? { fromAddress: recipient } : undefined,
-          }
-          : undefined,
+        undefined,
         {
           blockNumber: this.blockNumber,
           v3PoolSelection: {
@@ -200,8 +196,7 @@ export class Quote extends BaseCommand {
 
     if (!swapRoutes) {
       log.error(
-        `Could not find route. ${
-          debug ? '' : 'Run in debug mode for more info'
+        `Could not find route. ${debug ? "" : "Run in debug mode for more info"
         }.`
       );
       return;
