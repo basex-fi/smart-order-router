@@ -38,7 +38,7 @@ export type TokenAccessor = {
 
 // Base Tokens
 export const USDC_BASE = new Token(
-  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
   6,
   "USDbC",
   "USD Base Coin",
