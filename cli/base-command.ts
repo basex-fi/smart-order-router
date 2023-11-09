@@ -178,7 +178,6 @@ export abstract class BaseCommand extends Command {
   }
 
   async init() {
-    console.log("init");
     const query: ParserOutput<any, any> = this.parse();
     const {
       chainId: chainIdNumb,

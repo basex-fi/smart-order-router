@@ -126,7 +126,7 @@ export class Quote extends BaseCommand {
     let swapRoutes: SwapRoute | null;
     if (exactIn) {
       const amountIn = parseAmount(amountStr, tokenIn);
-      console.log(exactIn, amountIn);
+
       swapRoutes = await router.route(
         amountIn,
         tokenOut,

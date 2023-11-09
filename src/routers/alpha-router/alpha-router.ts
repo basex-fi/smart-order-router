@@ -715,7 +715,6 @@ export class AlphaRouter
     swapConfig?: SwapOptions,
     partialRoutingConfig: Partial<AlphaRouterConfig> = {}
   ): Promise<SwapRoute | null> {
-    console.log("in route");
     const { currencyIn, currencyOut } =
       this.determineCurrencyInOutFromTradeType(
         tradeType,
@@ -725,8 +724,6 @@ export class AlphaRouter
 
     const tokenIn = currencyIn.wrapped;
     const tokenOut = currencyOut.wrapped;
-
-    console.log("currencies", tokenIn, tokenOut);
 
     metric.setProperty("pair", `${tokenIn.symbol}/${tokenOut.symbol}`);
     metric.setProperty("tokenIn", tokenIn.address);
@@ -896,8 +893,6 @@ export class AlphaRouter
       swapRouteFromChainPromise,
     ]);
 
-    console.log("swap routes", swapRouteFromCache, swapRouteFromChain);
-
     let swapRouteRaw: BestSwapRoute | null;
     let hitsCachedRoute = false;
     if (cacheMode === CacheMode.Livemode && swapRouteFromCache) {
@@ -1064,7 +1059,6 @@ export class AlphaRouter
     // If user provided recipient, deadline etc. we also generate the calldata required to execute
     // the swap and return it too.
     if (swapConfig) {
-      console.log("swap config", swapConfig);
       methodParameters = buildSwapMethodParameters(trade, swapConfig);
     }
 

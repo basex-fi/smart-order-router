@@ -67,8 +67,6 @@ export async function getV3CandidatePools({
   poolProvider,
   blockedTokenListProvider,
 }: V3GetCandidatePoolsParams): Promise<V3CandidatePools> {
-
-  console.log("get candidate pool");
   const {
     blockNumber,
     v3PoolSelection: {
@@ -89,8 +87,6 @@ export async function getV3CandidatePools({
   const allPools = await subgraphProvider.getPools(tokenIn, tokenOut, {
     blockNumber,
   });
-
-  console.log("allPools", allPools);
 
   log.info(
     { samplePools: allPools.slice(0, 3) },
