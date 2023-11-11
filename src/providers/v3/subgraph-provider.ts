@@ -41,7 +41,7 @@ export const printV3SubgraphPool = (s: V3SubgraphPool) =>
   `${s.token0.id}/${s.token1.id}/${s.feeTier}`;
 
 const SUBGRAPH_URL =
-  "https://api.studio.thegraph.com/query/54040/basex/version/latest";
+  "https://api.studio.thegraph.com/query/58136/basex/version/latest";
 
 const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
 
