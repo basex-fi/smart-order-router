@@ -47,6 +47,7 @@ export type V3GetCandidatePoolsParams = {
   tokenProvider: ITokenProvider;
   poolProvider: IV3PoolProvider;
   blockedTokenListProvider?: ITokenListProvider;
+  chainId?: number;
 };
 
 const baseTokensByChain = [USDC_BASE];
@@ -66,6 +67,7 @@ export async function getV3CandidatePools({
   tokenProvider,
   poolProvider,
   blockedTokenListProvider,
+  chainId = 8453
 }: V3GetCandidatePoolsParams): Promise<V3CandidatePools> {
   const {
     blockNumber,
@@ -226,14 +228,13 @@ export async function getV3CandidatePools({
 
   addToAddressSet(top2DirectSwapPool);
 
-  const wrappedNativeAddress = WRAPPED_NATIVE_CURRENCY.address.toLowerCase();
+  const wrappedNativeAddress = WRAPPED_NATIVE_CURRENCY[chainId]?.address.toLowerCase();
 
   // Main reason we need this is for gas estimates, only needed if token out is not native.
   // We don't check the seen address set because if we've already added pools for getting native quotes
   // theres no need to add more.
   let top2EthQuoteTokenPool: V3SubgraphPool[] = [];
   if (
-    WRAPPED_NATIVE_CURRENCY.symbol == WRAPPED_NATIVE_CURRENCY.symbol &&
     tokenOut.symbol != "WETH" &&
     tokenOut.symbol != "WETH9" &&
     tokenOut.symbol != "ETH"

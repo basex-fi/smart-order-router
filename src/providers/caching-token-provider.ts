@@ -4,12 +4,23 @@ import _ from "lodash";
 import { log, WRAPPED_NATIVE_CURRENCY } from "../util";
 
 import { ICache } from "./cache";
-import { ITokenProvider, TokenAccessor, USDC_BASE } from "./token-provider";
+import {
+  ITokenProvider,
+  TokenAccessor,
+  USDC_BASE,
+  USDC_BASE_GOERLI,
+} from "./token-provider";
 
 // These tokens will added to the Token cache on initialization.
-export const CACHE_SEED_TOKENS: { [symbol: string]: Token } = {
-  USDC: USDC_BASE,
-  WETH: WRAPPED_NATIVE_CURRENCY,
+export const CACHE_SEED_TOKENS: Record<number, { [symbol: string]: Token }> = {
+  8453: {
+    USDC: USDC_BASE,
+    WETH: WRAPPED_NATIVE_CURRENCY[8453]!,
+  },
+  84531: {
+    USDC: USDC_BASE_GOERLI,
+    WETH: WRAPPED_NATIVE_CURRENCY[84531]!,
+  },
 };
 // Currently we do not have providers for Moonbeam mainnet or Gnosis testnet
 
@@ -21,9 +32,11 @@ export const CACHE_SEED_TOKENS: { [symbol: string]: Token } = {
  * @class CachingTokenProviderWithFallback
  */
 export class CachingTokenProviderWithFallback implements ITokenProvider {
-  private CACHE_KEY = (address: string) => `token-${address}`;
+  private CACHE_KEY = (chainId: number, address: string) =>
+    `token-${chainId}-${address}`;
 
   constructor(
+    protected chainId: number,
     // Token metadata (e.g. symbol and decimals) don't change so can be cached indefinitely.
     // Constructing a new token object is slow as sdk-core does checksumming.
     private tokenCache: ICache<Token>,
@@ -32,12 +45,12 @@ export class CachingTokenProviderWithFallback implements ITokenProvider {
   ) { }
 
   public async getTokens(_addresses: string[]): Promise<TokenAccessor> {
-    const seedTokens = CACHE_SEED_TOKENS;
+    const seedTokens = CACHE_SEED_TOKENS[this.chainId];
 
     if (seedTokens) {
       for (const token of Object.values(seedTokens)) {
         await this.tokenCache.set(
-          this.CACHE_KEY(token.address.toLowerCase()),
+          this.CACHE_KEY(this.chainId, token.address.toLowerCase()),
           token
         );
       }
@@ -55,12 +68,12 @@ export class CachingTokenProviderWithFallback implements ITokenProvider {
     const addressesToFindInSecondary = [];
 
     for (const address of addresses) {
-      if (await this.tokenCache.has(this.CACHE_KEY(address))) {
+      if (await this.tokenCache.has(this.CACHE_KEY(this.chainId, address))) {
         addressToToken[address.toLowerCase()] = (await this.tokenCache.get(
-          this.CACHE_KEY(address)
+          this.CACHE_KEY(this.chainId, address)
         ))!;
         symbolToToken[addressToToken[address]!.symbol!] =
-          (await this.tokenCache.get(this.CACHE_KEY(address)))!;
+          (await this.tokenCache.get(this.CACHE_KEY(this.chainId, address)))!;
       } else {
         addressesToFindInPrimary.push(address);
       }
@@ -88,7 +101,7 @@ export class CachingTokenProviderWithFallback implements ITokenProvider {
           addressToToken[address.toLowerCase()] = token;
           symbolToToken[addressToToken[address]!.symbol!] = token;
           await this.tokenCache.set(
-            this.CACHE_KEY(address.toLowerCase()),
+            this.CACHE_KEY(this.chainId, address.toLowerCase()),
             addressToToken[address]!
           );
         } else {
@@ -117,7 +130,7 @@ export class CachingTokenProviderWithFallback implements ITokenProvider {
           addressToToken[address.toLowerCase()] = token;
           symbolToToken[addressToToken[address]!.symbol!] = token;
           await this.tokenCache.set(
-            this.CACHE_KEY(address.toLowerCase()),
+            this.CACHE_KEY(this.chainId, address.toLowerCase()),
             addressToToken[address]!
           );
         }

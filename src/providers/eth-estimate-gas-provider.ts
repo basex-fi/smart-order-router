@@ -22,13 +22,14 @@ export class EthEstimateGasSimulator extends Simulator {
   private overrideEstimateMultiplier: number | undefined;
 
   constructor(
+    chainId: number,
     provider: JsonRpcProvider,
 
     v3PoolProvider: IV3PoolProvider,
 
     overrideEstimateMultiplier?: number
   ) {
-    super(provider);
+    super(provider, chainId);
 
     this.v3PoolProvider = v3PoolProvider;
     this.overrideEstimateMultiplier = overrideEstimateMultiplier ?? undefined;
@@ -78,6 +79,7 @@ export class EthEstimateGasSimulator extends Simulator {
       estimatedGasUsedQuoteToken,
       quoteGasAdjusted,
     } = await calculateGasUsed(
+      this.chainId,
       route,
       estimatedGasUsed,
       this.v3PoolProvider,

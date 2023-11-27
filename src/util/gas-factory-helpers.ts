@@ -28,9 +28,10 @@ import { buildTrade } from "./methodParameters";
 export async function getHighestLiquidityV3NativePool(
   token: Token,
   poolProvider: IV3PoolProvider,
-  providerConfig?: ProviderConfig
+  providerConfig?: ProviderConfig,
+  chainId = 8453
 ): Promise<Pool | null> {
-  const nativeCurrency = WRAPPED_NATIVE_CURRENCY!;
+  const nativeCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
 
   const nativePools = _([
     FeeAmount.HIGH,
@@ -74,11 +75,12 @@ export async function getHighestLiquidityV3NativePool(
 }
 
 export async function getHighestLiquidityV3USDPool(
+  chainId: number,
   poolProvider: IV3PoolProvider,
   providerConfig?: ProviderConfig
 ): Promise<Pool> {
   const usdTokens = usdGasTokensByChain;
-  const wrappedCurrency = WRAPPED_NATIVE_CURRENCY!;
+  const wrappedCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
 
   if (!usdTokens) {
     throw new Error(`Could not find a USD token for computing gas costs`);
@@ -211,6 +213,7 @@ export function getL2ToL1GasUsed(data: string, overhead: BigNumber): BigNumber {
 }
 
 export async function calculateGasUsed(
+  chainId: number,
   route: SwapRoute,
   simulatedGasUsed: BigNumber,
 
@@ -229,13 +232,14 @@ export async function calculateGasUsed(
 
   // add l2 to l1 fee and wrap fee to native currency
   const gasCostInWei = gasPriceWei.mul(simulatedGasUsed).add(l2toL1FeeInWei);
-  const nativeCurrency = WRAPPED_NATIVE_CURRENCY;
+  const nativeCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
   const costNativeCurrency = getGasCostInNativeCurrency(
     nativeCurrency,
     gasCostInWei
   );
 
   const usdPool: Pool = await getHighestLiquidityV3USDPool(
+    chainId,
     v3PoolProvider,
     providerConfig
   );

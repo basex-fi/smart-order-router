@@ -47,7 +47,7 @@ export const USDC_BASE = new Token(
 
 // Base Goerli Tokens
 export const USDC_BASE_GOERLI = new Token(
-  "0x853154e2A5604E5C74a2546E2871Ad44932eB92C",
+  "0x20b6bCC093029c31C65db62C634ab71172d86Ebc",
   6,
   "USDbC",
   "USD Base Coin",

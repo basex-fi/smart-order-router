@@ -53,11 +53,13 @@ export interface ITokenValidatorProvider {
 }
 
 export class TokenValidatorProvider implements ITokenValidatorProvider {
-  private CACHE_KEY = (address: string) => `token-${address}`;
+  private CACHE_KEY = (chainId: number, address: string) =>
+    `token-${chainId}-${address}`;
 
   private BASES: string[];
 
   constructor(
+    protected chainId: number,
     protected multicall2Provider: IMulticallProvider,
     private tokenValidationCache: ICache<TokenValidationResult>,
     private tokenValidatorAddress = TOKEN_VALIDATOR_ADDRESS,
@@ -65,7 +67,7 @@ export class TokenValidatorProvider implements ITokenValidatorProvider {
     private amountToFlashBorrow = AMOUNT_TO_FLASH_BORROW,
     private allowList = DEFAULT_ALLOWLIST
   ) {
-    this.BASES = [WRAPPED_NATIVE_CURRENCY!.address];
+    this.BASES = [WRAPPED_NATIVE_CURRENCY[this.chainId]!.address];
   }
 
   public async validateTokens(
@@ -83,9 +85,15 @@ export class TokenValidatorProvider implements ITokenValidatorProvider {
 
     // Check if we have cached token validation results for any tokens.
     for (const address of addressesRaw) {
-      if (await this.tokenValidationCache.has(this.CACHE_KEY(address))) {
+      if (
+        await this.tokenValidationCache.has(
+          this.CACHE_KEY(this.chainId, address)
+        )
+      ) {
         tokenToResult[address.toLowerCase()] =
-          (await this.tokenValidationCache.get(this.CACHE_KEY(address)))!;
+          (await this.tokenValidationCache.get(
+            this.CACHE_KEY(this.chainId, address)
+          ))!;
 
         metric.putMetric(
           `TokenValidatorProviderValidateCacheHitResult${tokenToResult[address.toLowerCase()]
@@ -133,7 +141,7 @@ export class TokenValidatorProvider implements ITokenValidatorProvider {
         tokenToResult[token.address.toLowerCase()] = TokenValidationResult.UNKN;
 
         await this.tokenValidationCache.set(
-          this.CACHE_KEY(token.address.toLowerCase()),
+          this.CACHE_KEY(this.chainId, token.address.toLowerCase()),
           tokenToResult[token.address.toLowerCase()]!
         );
 
@@ -169,7 +177,7 @@ export class TokenValidatorProvider implements ITokenValidatorProvider {
         validationResult as TokenValidationResult;
 
       await this.tokenValidationCache.set(
-        this.CACHE_KEY(token.address.toLowerCase()),
+        this.CACHE_KEY(this.chainId, token.address.toLowerCase()),
         tokenToResult[token.address.toLowerCase()]!
       );
 

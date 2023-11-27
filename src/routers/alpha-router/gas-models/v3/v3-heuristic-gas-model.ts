@@ -53,6 +53,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
   }
 
   public async buildGasModel({
+    chainId = 8453,
     gasPriceWei,
     pools,
     amountToken,
@@ -91,7 +92,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
       );
 
       // wrap fee to native currency
-      const nativeCurrency = WRAPPED_NATIVE_CURRENCY;
+      const nativeCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
       const costNativeCurrency = CurrencyAmount.fromRawAmount(
         nativeCurrency,
         l1FeeInWei.toString()
@@ -135,7 +136,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
     // If our quote token is WETH, we don't need to convert our gas use to be in terms
     // of the quote token in order to produce a gas adjusted amount.
     // We do return a gas use in USD however, so we still convert to usd.
-    const nativeCurrency = WRAPPED_NATIVE_CURRENCY!;
+    const nativeCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
     if (quoteToken.equals(nativeCurrency)) {
       const estimateGasCost = (
         routeWithValidQuote: V3RouteWithValidQuote
@@ -147,7 +148,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
         const { totalGasCostNativeCurrency, baseGasUse } = this.estimateGas(
           routeWithValidQuote,
           gasPriceWei,
-
+          chainId,
           providerConfig
         );
 
@@ -198,7 +199,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
       const { totalGasCostNativeCurrency, baseGasUse } = this.estimateGas(
         routeWithValidQuote,
         gasPriceWei,
-
+        chainId,
         providerConfig
       );
 
@@ -343,7 +344,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
   private estimateGas(
     routeWithValidQuote: V3RouteWithValidQuote,
     gasPriceWei: BigNumber,
-
+    chainId: number,
     providerConfig?: ProviderConfig
   ) {
     const totalInitializedTicksCrossed = BigNumber.from(
@@ -377,7 +378,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
 
     const baseGasCostWei = gasPriceWei.mul(baseGasUse);
 
-    const wrappedCurrency = WRAPPED_NATIVE_CURRENCY!;
+    const wrappedCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
 
     const totalGasCostNativeCurrency = CurrencyAmount.fromRawAmount(
       wrappedCurrency,

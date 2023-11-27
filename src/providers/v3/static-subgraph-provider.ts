@@ -12,7 +12,10 @@ import { USDC_BASE } from "../token-provider";
 import { IV3PoolProvider } from "./pool-provider";
 import { IV3SubgraphProvider, V3SubgraphPool } from "./subgraph-provider";
 
-const BASES_TO_CHECK_TRADES_AGAINST = [WRAPPED_NATIVE_CURRENCY, USDC_BASE];
+const BASES_TO_CHECK_TRADES_AGAINST: Record<number, Token[]> = {
+  8453: [WRAPPED_NATIVE_CURRENCY[8453]!, USDC_BASE],
+  84531: [WRAPPED_NATIVE_CURRENCY[84531]!, USDC_BASE],
+};
 
 /**
  * Provider that uses a hardcoded list of V3 pools to generate a list of subgraph pools.
@@ -26,7 +29,7 @@ const BASES_TO_CHECK_TRADES_AGAINST = [WRAPPED_NATIVE_CURRENCY, USDC_BASE];
  * @class StaticV3SubgraphProvider
  */
 export class StaticV3SubgraphProvider implements IV3SubgraphProvider {
-  constructor(private poolProvider: IV3PoolProvider) { }
+  constructor(private chainId: number, private poolProvider: IV3PoolProvider) { }
 
   public async getPools(
     tokenIn?: Token,
@@ -34,7 +37,7 @@ export class StaticV3SubgraphProvider implements IV3SubgraphProvider {
     providerConfig?: ProviderConfig
   ): Promise<V3SubgraphPool[]> {
     log.info("In static subgraph provider for V3");
-    const bases = BASES_TO_CHECK_TRADES_AGAINST;
+    const bases = BASES_TO_CHECK_TRADES_AGAINST[this.chainId]!;
 
     const basePairs: [Token, Token][] = _.flatMap(
       bases,

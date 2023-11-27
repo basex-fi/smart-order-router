@@ -346,6 +346,7 @@ export class AlphaRouter
   IRouter<AlphaRouterConfig>,
   ISwapToRatio<AlphaRouterConfig, SwapAndAddConfig>
 {
+  protected chainId: number;
   protected provider: BaseProvider;
   protected multicall2Provider: UniswapMulticallProvider;
   protected v3SubgraphProvider: IV3SubgraphProvider;
@@ -388,6 +389,7 @@ export class AlphaRouter
     tokenPropertiesProvider,
     chainId = 8453,
   }: AlphaRouterParams) {
+    this.chainId = chainId;
     this.provider = provider;
     this.multicall2Provider =
       multicall2Provider ??
@@ -459,6 +461,7 @@ export class AlphaRouter
     this.tokenProvider =
       tokenProvider ??
       new CachingTokenProviderWithFallback(
+        this.chainId,
         new NodeJSCache(new NodeCache({ stdTTL: 3600, useClones: false })),
         new CachingTokenListProvider(
           DEFAULT_TOKEN_LIST,
@@ -481,7 +484,7 @@ export class AlphaRouter
           ),
           new NodeJSCache(new NodeCache({ stdTTL: 300, useClones: false }))
         ),
-        new StaticV3SubgraphProvider(this.v3PoolProvider),
+        new StaticV3SubgraphProvider(this.chainId, this.v3PoolProvider),
       ]);
     }
 
@@ -1391,10 +1394,11 @@ export class AlphaRouter
     const beforeGasModel = Date.now();
 
     const usdPoolPromise = getHighestLiquidityV3USDPool(
+      this.chainId,
       this.v3PoolProvider,
       providerConfig
     );
-    const nativeCurrency = WRAPPED_NATIVE_CURRENCY;
+    const nativeCurrency = WRAPPED_NATIVE_CURRENCY[this.chainId]!;
     const nativeQuoteTokenV3PoolPromise = !quoteToken.equals(nativeCurrency)
       ? getHighestLiquidityV3NativePool(
         quoteToken,

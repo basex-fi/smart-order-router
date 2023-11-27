@@ -26,6 +26,7 @@ export type L1ToL2GasCosts = {
 };
 
 export type BuildOnChainGasModelFactoryType = {
+  chainId?: number;
   gasPriceWei: BigNumber;
   pools: LiquidityCalculationPools;
   amountToken: Token;

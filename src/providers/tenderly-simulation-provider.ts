@@ -78,11 +78,12 @@ export class FallbackTenderlySimulator extends Simulator {
   private tenderlySimulator: TenderlySimulator;
   private ethEstimateGasSimulator: EthEstimateGasSimulator;
   constructor(
+    chainId: number,
     provider: JsonRpcProvider,
     tenderlySimulator: TenderlySimulator,
     ethEstimateGasSimulator: EthEstimateGasSimulator
   ) {
-    super(provider);
+    super(provider, chainId);
     this.tenderlySimulator = tenderlySimulator;
     this.ethEstimateGasSimulator = ethEstimateGasSimulator;
   }
@@ -305,6 +306,7 @@ export class TenderlySimulator extends Simulator {
       estimatedGasUsedQuoteToken,
       quoteGasAdjusted,
     } = await calculateGasUsed(
+      this.chainId,
       swapRoute,
       estimatedGasUsed,
 

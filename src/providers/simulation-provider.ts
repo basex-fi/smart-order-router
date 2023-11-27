@@ -42,7 +42,7 @@ export abstract class Simulator {
    * Returns a new SwapRoute with simulated gas estimates
    * @returns SwapRoute
    */
-  constructor(provider: JsonRpcProvider) {
+  constructor(provider: JsonRpcProvider, protected chainId = 8453) {
     this.provider = provider;
   }
 
