@@ -43,6 +43,9 @@ export const printV3SubgraphPool = (s: V3SubgraphPool) =>
 const SUBGRAPH_URL =
   "https://api.studio.thegraph.com/query/58136/basex/version/latest";
 
+const SUBGRAPH_URL_TESTNET =
+  "https://api.studio.thegraph.com/query/54040/basex-goerli/version/latest";
+
 const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
 
 /**
@@ -65,9 +68,10 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
   constructor(
     private retries = 2,
     private timeout = 30000,
-    private rollback = true
+    private rollback = true,
+    chainId = 8453
   ) {
-    const subgraphUrl = SUBGRAPH_URL;
+    const subgraphUrl = chainId === 8453 ? SUBGRAPH_URL : SUBGRAPH_URL_TESTNET;
     if (!subgraphUrl) {
       throw new Error(`No subgraph url`);
     }
