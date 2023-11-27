@@ -198,6 +198,8 @@ export type AlphaRouterParams = {
    * A provider for getting token properties for special tokens like fee-on-transfer tokens.
    */
   tokenPropertiesProvider?: ITokenPropertiesProvider;
+
+  chainId?: number;
 };
 
 export class MapWithLowerCaseKey<V> extends Map<string, V> {
@@ -384,6 +386,7 @@ export class AlphaRouter
     simulator,
     routeCachingProvider,
     tokenPropertiesProvider,
+    chainId = 8453,
   }: AlphaRouterParams) {
     this.provider = provider;
     this.multicall2Provider =
@@ -428,7 +431,9 @@ export class AlphaRouter
             attemptsBeforeRollback: 1,
             rollbackBlockOffset: -10,
           },
-        }
+        },
+        undefined,
+        chainId
       );
     }
 

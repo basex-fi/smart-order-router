@@ -2,7 +2,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { BaseProvider } from "@ethersproject/providers";
 import { Protocol } from "@basex-fi/router-sdk";
 
-import { encodeRouteToPath, QUOTER_ADDRESS } from "@basex-fi/sdk-core";
+import { encodeRouteToPath } from "@basex-fi/sdk-core";
 import retry, { Options as RetryOptions } from "async-retry";
 import _ from "lodash";
 import stats from "stats-lite";
@@ -12,6 +12,7 @@ import { V3Route } from "../routers/router";
 import { IQuoterV2__factory } from "../types/v3/factories/IQuoterV2__factory";
 import { metric, MetricLoggerUnit } from "../util";
 
+import { QUOTER_ADDRESS } from "../util";
 import { CurrencyAmount } from "../util/amounts";
 import { log } from "../util/log";
 import { routeToString } from "../util/routes";
@@ -281,14 +282,15 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
       baseBlockOffset: 0,
       rollback: { enabled: false },
     },
-    protected quoterAddressOverride?: string
+    protected quoterAddressOverride?: string,
+    protected chainId = 8453
   ) { }
 
   private getQuoterAddress(): string {
     if (this.quoterAddressOverride) {
       return this.quoterAddressOverride;
     }
-    const quoterAddress = QUOTER_ADDRESS;
+    const quoterAddress = (QUOTER_ADDRESS as any)[this.chainId];
 
     if (!quoterAddress) {
       throw new Error(`No address for the quoter contract`);
