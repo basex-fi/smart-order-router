@@ -390,7 +390,8 @@ export class AlphaRouter
   }: AlphaRouterParams) {
     this.provider = provider;
     this.multicall2Provider =
-      multicall2Provider ?? new UniswapMulticallProvider(provider, 375_000);
+      multicall2Provider ??
+      new UniswapMulticallProvider(provider, 375_000, chainId);
     this.v3PoolProvider =
       v3PoolProvider ??
       new CachingV3PoolProvider(
