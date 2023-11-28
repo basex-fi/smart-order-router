@@ -49,7 +49,7 @@ const SUBGRAPH_URL =
   "https://api.studio.thegraph.com/query/58136/basex/version/latest";
 
 const SUBGRAPH_URL_TESTNET =
-  "https://api.studio.thegraph.com/query/54040/basex-goerli/v0.0.31";
+  "https://api.studio.thegraph.com/query/54040/basex-goerli/version/latest";
 
 const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
 
