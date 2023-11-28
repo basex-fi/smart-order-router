@@ -16,7 +16,6 @@ import {
   TokenList,
   TradeType,
   DEFAULT_TOKEN_LIST,
-  SWAP_ROUTER_02_ADDRESS,
 } from "@basex-fi/sdk-core";
 import retry from "async-retry";
 import JSBI from "jsbi";
@@ -120,6 +119,7 @@ import {
   LiquidityCalculationPools,
 } from "./gas-models/gas-model";
 
+import { SWAP_ROUTER_02_ADDRESS } from "../../util";
 import { NATIVE_OVERHEAD } from "./gas-models/v3/gas-costs";
 import { GetQuotesResult, V3Quoter } from "./quoters";
 
@@ -512,7 +512,8 @@ export class AlphaRouter
       v3GasModelFactory ?? new V3HeuristicGasModelFactory();
 
     this.swapRouterProvider =
-      swapRouterProvider ?? new SwapRouterProvider(this.multicall2Provider);
+      swapRouterProvider ??
+      new SwapRouterProvider(this.chainId, this.multicall2Provider);
 
     this.l2GasDataProvider =
       optimismGasDataProvider ??
@@ -1069,7 +1070,11 @@ export class AlphaRouter
     // If user provided recipient, deadline etc. we also generate the calldata required to execute
     // the swap and return it too.
     if (swapConfig) {
-      methodParameters = buildSwapMethodParameters(trade, swapConfig);
+      methodParameters = buildSwapMethodParameters(
+        trade,
+        swapConfig,
+        this.chainId
+      );
     }
 
     const portionAmount = undefined;
@@ -1519,7 +1524,7 @@ export class AlphaRouter
         approvalTypes.approvalTokenIn,
         approvalTypes.approvalTokenOut
       ),
-      to: SWAP_ROUTER_02_ADDRESS,
+      to: SWAP_ROUTER_02_ADDRESS[this.chainId]!,
     };
   }
 

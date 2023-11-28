@@ -2,7 +2,7 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 
 import axios, { AxiosRequestConfig } from "axios";
 import { BigNumber } from "ethers/lib/ethers";
-import { SWAP_ROUTER_02_ADDRESS } from "@basex-fi/sdk-core";
+
 import {
   metric,
   MetricLoggerUnit,
@@ -11,7 +11,7 @@ import {
   SwapType,
 } from "../routers";
 
-import { log } from "../util";
+import { log, SWAP_ROUTER_02_ADDRESS } from "../util";
 import { APPROVE_TOKEN_FOR_TRANSFER } from "../util/callData";
 import {
   calculateGasUsed,
@@ -217,7 +217,7 @@ export class TenderlySimulator extends Simulator {
 
       const swap: TenderlySimulationRequest = {
         input: calldata,
-        to: SWAP_ROUTER_02_ADDRESS,
+        to: SWAP_ROUTER_02_ADDRESS[this.chainId]!,
         estimate_gas: true,
         value: currencyIn.isNative ? swapRoute.methodParameters.value : "0",
         from: fromAddress,

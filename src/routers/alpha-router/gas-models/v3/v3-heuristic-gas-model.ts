@@ -415,7 +415,7 @@ export class V3HeuristicGasModelFactory extends IOnChainGasModelFactory {
 
     // build trade for swap calldata
     const trade = buildTrade(amountToken, outputToken, route.tradeType, routes);
-    const data = buildSwapMethodParameters(trade, swapConfig).calldata;
+    const data = buildSwapMethodParameters(trade, swapConfig, 8453).calldata;
     const l1GasUsed = getL2ToL1GasUsed(data, overhead);
     // l1BaseFee is L1 Gas Price on etherscan
     const l1Fee = l1GasUsed.mul(l1BaseFee);

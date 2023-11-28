@@ -1,6 +1,6 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { TradeType, SWAP_ROUTER_02_ADDRESS } from "@basex-fi/sdk-core";
-
+import { TradeType } from "@basex-fi/sdk-core";
+import { SWAP_ROUTER_02_ADDRESS } from "../util";
 import { BigNumber } from "ethers/lib/ethers";
 
 import { SwapOptions, SwapRoute, SwapType } from "../routers";
@@ -162,7 +162,7 @@ export abstract class Simulator {
 
       const allowance = await tokenContract.allowance(
         fromAddress,
-        SWAP_ROUTER_02_ADDRESS
+        SWAP_ROUTER_02_ADDRESS[this.chainId]!
       );
       const hasAllowance = allowance.gte(
         BigNumber.from(inputAmount.quotient.toString())

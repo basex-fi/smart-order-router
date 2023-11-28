@@ -3,13 +3,9 @@ import {
   SwapRouter as SwapRouter02,
   Trade,
 } from "@basex-fi/router-sdk";
-import {
-  Currency,
-  TradeType,
-  SWAP_ROUTER_02_ADDRESS,
-  Route as V3RouteRaw,
-} from "@basex-fi/sdk-core";
+import { Currency, TradeType, Route as V3RouteRaw } from "@basex-fi/sdk-core";
 
+import { SWAP_ROUTER_02_ADDRESS } from "../util";
 import _ from "lodash";
 
 import {
@@ -106,7 +102,8 @@ export function buildTrade<TTradeType extends TradeType>(
 
 export function buildSwapMethodParameters(
   trade: Trade<Currency, Currency, TradeType>,
-  swapConfig: SwapOptions
+  swapConfig: SwapOptions,
+  chainId: number
 ): MethodParameters {
   if (swapConfig.type == SwapType.SWAP_ROUTER_02) {
     const { recipient, slippageTolerance, deadline, inputTokenPermit } =
@@ -119,7 +116,7 @@ export function buildSwapMethodParameters(
         deadlineOrPreviousBlockhash: deadline,
         inputTokenPermit,
       }),
-      to: SWAP_ROUTER_02_ADDRESS,
+      to: SWAP_ROUTER_02_ADDRESS[chainId]!,
     };
   }
 

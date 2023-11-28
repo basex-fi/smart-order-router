@@ -1,10 +1,7 @@
 import { ApprovalTypes } from "@basex-fi/router-sdk";
-import {
-  Currency,
-  CurrencyAmount,
-  SWAP_ROUTER_02_ADDRESS,
-} from "@basex-fi/sdk-core";
+import { Currency, CurrencyAmount } from "@basex-fi/sdk-core";
 
+import { SWAP_ROUTER_02_ADDRESS } from "../util";
 import { SwapRouter02__factory } from "../types/other/factories/SwapRouter02__factory";
 import { log } from "../util";
 
@@ -36,7 +33,10 @@ export interface ISwapRouterProvider {
 }
 
 export class SwapRouterProvider implements ISwapRouterProvider {
-  constructor(protected multicall2Provider: IMulticallProvider) { }
+  constructor(
+    protected chainId: number,
+    protected multicall2Provider: IMulticallProvider
+  ) { }
 
   public async getApprovalType(
     tokenInAmount: CurrencyAmount<Currency>,
@@ -58,7 +58,7 @@ export class SwapRouterProvider implements ISwapRouterProvider {
         [string, string],
         [ApprovalTypes]
       >({
-        address: SWAP_ROUTER_02_ADDRESS,
+        address: SWAP_ROUTER_02_ADDRESS[this.chainId]!,
         contractInterface: SwapRouter02__factory.createInterface(),
         functionName: "getApprovalType",
         functionParams,

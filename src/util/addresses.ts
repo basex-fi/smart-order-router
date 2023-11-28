@@ -15,3 +15,8 @@ export const FACTORY_ADDRESS: Record<number, string> = {
   8453: "0xdC323d16C451819890805737997F4Ede96b95e3e",
   84531: "0xdeb5da25276F0e9776044b5a7f45Fd692B1dAF8B",
 };
+
+export const SWAP_ROUTER_02_ADDRESS: Record<number, string> = {
+  8453: "0x875f7D1A45C5f9D8deeb19bEe68f72fe4187e490",
+  84531: "0x316a627D0c4E7710Ceb172B9255f808Fed5D45E7",
+};
