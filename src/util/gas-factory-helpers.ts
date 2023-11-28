@@ -79,7 +79,7 @@ export async function getHighestLiquidityV3USDPool(
   poolProvider: IV3PoolProvider,
   providerConfig?: ProviderConfig
 ): Promise<Pool> {
-  const usdTokens = usdGasTokensByChain;
+  const usdTokens = usdGasTokensByChain[chainId]!;
   const wrappedCurrency = WRAPPED_NATIVE_CURRENCY[chainId]!;
 
   if (!usdTokens) {
@@ -253,7 +253,8 @@ export async function calculateGasUsed(
       getHighestLiquidityV3NativePool(
         quoteToken,
         v3PoolProvider,
-        providerConfig
+        providerConfig,
+        chainId
       ),
     ]);
     const nativePool = nativePools.find((pool) => pool !== null);

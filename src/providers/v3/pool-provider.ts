@@ -1,6 +1,6 @@
 import { BigNumber } from "@ethersproject/bignumber";
-import { Token, computePoolAddress, FeeAmount, Pool, FACTORY_ADDRESS } from "@basex-fi/sdk-core";
-
+import { Token, computePoolAddress, FeeAmount, Pool } from "@basex-fi/sdk-core";
+import { FACTORY_ADDRESS } from "../../util";
 import retry, { Options as RetryOptions } from "async-retry";
 import _ from "lodash";
 
@@ -81,6 +81,7 @@ export class V3PoolProvider implements IV3PoolProvider {
    * @param retryOptions The retry options for each call to the multicall.
    */
   constructor(
+    protected chainId: number,
     protected multicall2Provider: IMulticallProvider,
     protected retryOptions: V3PoolRetryOptions = {
       retries: 2,
@@ -214,7 +215,7 @@ export class V3PoolProvider implements IV3PoolProvider {
       ? [tokenA, tokenB]
       : [tokenB, tokenA];
 
-    const cacheKey = `${token0.address}/${token1.address}/${feeAmount}`;
+    const cacheKey = `${this.chainId}/${token0.address}/${token1.address}/${feeAmount}`;
 
     const cachedAddress = this.POOL_ADDRESS_CACHE[cacheKey];
 
@@ -223,7 +224,7 @@ export class V3PoolProvider implements IV3PoolProvider {
     }
 
     const poolAddress = computePoolAddress({
-      factoryAddress: FACTORY_ADDRESS!,
+      factoryAddress: FACTORY_ADDRESS[this.chainId]!,
       tokenA: token0,
       tokenB: token1,
       fee: feeAmount,

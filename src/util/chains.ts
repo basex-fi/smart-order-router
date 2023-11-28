@@ -19,9 +19,14 @@ export const NATIVE_NAMES: string[] = [
 
 export const NATIVE_CURRENCY = NativeCurrencyName.ETHER;
 
-export const TO_PROVIDER = (): string => process.env.JSON_RPC_PROVIDER!;
+export const TO_PROVIDER = (chainId: number): string =>
+({
+  8453: process.env.JSON_RPC_PROVIDER_BASE,
+  84531: process.env.JSON_RPC_PROVIDER_BASE_GOERLI,
+}[chainId]!);
 
-export const TO_NETWORK_NAME = (): string => "base-mainnet";
+export const TO_NETWORK_NAME = (chainId: number): string =>
+  ({ 8453: "base-mainnet", 84531: "base-goerli" }[chainId]!);
 
 export const WRAPPED_NATIVE_CURRENCY: Record<number, Token> = {
   8453: new Token(

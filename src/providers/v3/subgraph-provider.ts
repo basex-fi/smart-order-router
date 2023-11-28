@@ -7,6 +7,11 @@ import _ from "lodash";
 import { log } from "../../util";
 import { ProviderConfig } from "../provider";
 
+const depcreactedPools = [
+  "0x6ba4fe5647cfcc753cf5a15459b6fff8d506f082",
+  "0xc4b3a16116a163b154ef6b12a91a3675a16f2ca8",
+];
+
 export interface V3SubgraphPool {
   id: string;
   feeTier: string;
@@ -44,7 +49,7 @@ const SUBGRAPH_URL =
   "https://api.studio.thegraph.com/query/58136/basex/version/latest";
 
 const SUBGRAPH_URL_TESTNET =
-  "https://api.studio.thegraph.com/query/54040/basex-goerli/version/latest";
+  "https://api.studio.thegraph.com/query/54040/basex-goerli/v0.0.31";
 
 const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
 
@@ -137,7 +142,9 @@ export class V3SubgraphProvider implements IV3SubgraphProvider {
               id: lastId,
             });
 
-            poolsPage = poolsResult.pools;
+            poolsPage = poolsResult.pools.filter(
+              (p) => !depcreactedPools.includes(p.id)
+            );
 
             pools = pools.concat(poolsPage);
 

@@ -33,6 +33,7 @@ export async function getBestSwapRoute(
   percents: number[],
   routesWithValidQuotes: RouteWithValidQuote[],
   routeType: TradeType,
+  chainId: number,
   routingConfig: AlphaRouterConfig,
   gasModel?: IGasModel<V3RouteWithValidQuote>
 ): Promise<BestSwapRoute | null> {
@@ -59,6 +60,7 @@ export async function getBestSwapRoute(
     routeType,
     percentToQuotes,
     percents,
+    chainId,
     (rq: RouteWithValidQuote) => rq.quoteAdjustedForGas,
     routingConfig,
     gasModel
@@ -120,6 +122,7 @@ export async function getBestSwapRouteBy(
   routeType: TradeType,
   percentToQuotes: { [percent: number]: RouteWithValidQuote[] },
   percents: number[],
+  chainId: number,
   by: (routeQuote: RouteWithValidQuote) => CurrencyAmount,
   routingConfig: AlphaRouterConfig,
   gasModel?: IGasModel<V3RouteWithValidQuote>
@@ -395,13 +398,13 @@ export async function getBestSwapRouteBy(
       BigNumber.from(0)
     );
 
-  if (!usdGasTokensByChain![0]) {
+  if (!usdGasTokensByChain[chainId] || !usdGasTokensByChain[chainId]![0]) {
     // Each route can use a different stablecoin to account its gas costs.
     // They should all be pegged, and this is just an estimate, so we do a merge
     // to an arbitrary stable.
     throw new Error(`Could not find a USD token for computing gas costs`);
   }
-  const usdToken = usdGasTokensByChain![0]!;
+  const usdToken = usdGasTokensByChain[chainId]![0]!;
   const usdTokenDecimals = usdToken.decimals;
 
   // if on L2, calculate the L1 security fee

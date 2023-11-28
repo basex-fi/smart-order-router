@@ -100,7 +100,12 @@ export abstract class BaseCommand extends Command {
       required: false,
       default: 5,
     }),
-
+    chainId: flags.integer({
+      char: "c",
+      required: false,
+      default: 8453,
+      options: ["8453", "84531"],
+    }),
     tokenListURI: flags.string({
       required: false,
     }),
@@ -213,12 +218,12 @@ export abstract class BaseCommand extends Command {
     if (debug || debugJSON) {
       setGlobalLogger(this.logger);
     }
-
-    const chainProvider = TO_PROVIDER();
+    const chainId = Number(chainIdNumb);
+    const chainProvider = TO_PROVIDER(chainIdNumb);
 
     const metricLogger: MetricLogger = new MetricLogger({
       chainId: chainIdNumb,
-      networkName: TO_NETWORK_NAME(),
+      networkName: TO_NETWORK_NAME(chainIdNumb),
     });
     setGlobalMetric(metricLogger);
 
@@ -242,13 +247,18 @@ export abstract class BaseCommand extends Command {
       );
     }
 
-    const multicall2Provider = new UniswapMulticallProvider(provider);
+    const multicall2Provider = new UniswapMulticallProvider(
+      provider,
+      undefined,
+      chainId
+    );
     this._multicall2Provider = multicall2Provider;
-    this._poolProvider = new V3PoolProvider(multicall2Provider);
+    this._poolProvider = new V3PoolProvider(chainId, multicall2Provider);
 
     // initialize tokenProvider
     const tokenProviderOnChain = new TokenProvider(multicall2Provider);
     this._tokenProvider = new CachingTokenProviderWithFallback(
+      chainId,
       tokenCache,
       tokenListProvider,
       tokenProviderOnChain
@@ -259,11 +269,12 @@ export abstract class BaseCommand extends Command {
     );
 
     const v3PoolProvider = new CachingV3PoolProvider(
-      new V3PoolProvider(multicall2Provider),
+      new V3PoolProvider(chainId, multicall2Provider),
       new NodeJSCache(new NodeCache({ stdTTL: 360, useClones: false }))
     );
 
     const tenderlySimulator = new TenderlySimulator(
+      chainId,
       "http://api.tenderly.co",
       process.env.TENDERLY_USER!,
       process.env.TENDERLY_PROJECT!,
@@ -274,12 +285,14 @@ export abstract class BaseCommand extends Command {
     );
 
     const ethEstimateGasSimulator = new EthEstimateGasSimulator(
+      chainId,
       provider,
 
       v3PoolProvider
     );
 
     const simulator = new FallbackTenderlySimulator(
+      chainId,
       provider,
 
       tenderlySimulator,
@@ -288,7 +301,7 @@ export abstract class BaseCommand extends Command {
 
     const router = new AlphaRouter({
       provider,
-
+      chainId,
       multicall2Provider: multicall2Provider,
       gasPriceProvider: new CachingGasStationProvider(
         new OnChainGasPriceProvider(
@@ -297,7 +310,12 @@ export abstract class BaseCommand extends Command {
         ),
         gasPriceCache
       ),
-      v3SubgraphProvider: new V3SubgraphProvider(),
+      v3SubgraphProvider: new V3SubgraphProvider(
+        undefined,
+        undefined,
+        undefined,
+        chainId
+      ),
       simulator,
     });
 

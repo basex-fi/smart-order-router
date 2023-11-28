@@ -2,7 +2,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Token, Pool } from "@basex-fi/sdk-core";
 
 import { ProviderConfig } from "../../../providers/provider";
-import { USDC_BASE } from "../../../providers/token-provider";
+import { USDC_BASE, USDC_BASE_GOERLI } from "../../../providers/token-provider";
 
 import {
   IL2GasDataProvider,
@@ -17,7 +17,10 @@ import {
 // When adding new usd gas tokens, ensure the tokens are ordered
 // from tokens with highest decimals to lowest decimals. For example,
 // DAI_AVAX has 18 decimals and comes before USDC_AVAX which has 6 decimals.
-export const usdGasTokensByChain = [USDC_BASE];
+export const usdGasTokensByChain: Record<number, Token[]> = {
+  8453: [USDC_BASE],
+  84531: [USDC_BASE_GOERLI],
+};
 
 export type L1ToL2GasCosts = {
   gasUsedL1: BigNumber;
@@ -81,6 +84,7 @@ export abstract class IOnChainGasModelFactory {
   public abstract buildGasModel({
     gasPriceWei,
     pools,
+    chainId,
     amountToken,
     quoteToken,
     l2GasDataProvider,

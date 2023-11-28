@@ -10,7 +10,7 @@ import stats from "stats-lite";
 import { V3Route } from "../routers/router";
 
 import { IQuoterV2__factory } from "../types/v3/factories/IQuoterV2__factory";
-import { metric, MetricLoggerUnit } from "../util";
+import { metric, MetricLoggerUnit, TO_NETWORK_NAME } from "../util";
 
 import { QUOTER_ADDRESS } from "../util";
 import { CurrencyAmount } from "../util/amounts";
@@ -366,6 +366,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
           encodedRoute,
           `0x${amount.quotient.toString(16)}`,
         ]);
+
         return routeInputs;
       })
       .value();
@@ -394,7 +395,7 @@ export class OnChainQuoteProvider implements IOnChainQuoteProvider {
 
     metric.putMetric("QuoteBatchSize", inputs.length, MetricLoggerUnit.Count);
     metric.putMetric(
-      `QuoteBatchSize_BASE`,
+      `QuoteBatchSize_${TO_NETWORK_NAME(this.chainId)}`,
       inputs.length,
       MetricLoggerUnit.Count
     );

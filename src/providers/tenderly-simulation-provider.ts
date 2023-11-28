@@ -153,6 +153,7 @@ export class TenderlySimulator extends Simulator {
   private tenderlyRequestTimeout?: number;
 
   constructor(
+    chainId: number,
     tenderlyBaseUrl: string,
     tenderlyUser: string,
     tenderlyProject: string,
@@ -162,7 +163,7 @@ export class TenderlySimulator extends Simulator {
     overrideEstimateMultiplier?: number,
     tenderlyRequestTimeout?: number
   ) {
-    super(provider);
+    super(provider, chainId);
     this.tenderlyBaseUrl = tenderlyBaseUrl;
     this.tenderlyUser = tenderlyUser;
     this.tenderlyProject = tenderlyProject;

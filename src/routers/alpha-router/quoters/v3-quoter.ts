@@ -42,16 +42,18 @@ export class V3Quoter extends BaseQuoter<V3CandidatePools, V3Route> {
     v3PoolProvider: IV3PoolProvider,
     onChainQuoteProvider: IOnChainQuoteProvider,
     tokenProvider: ITokenProvider,
-
+    chainId = 8453,
     blockedTokenListProvider?: ITokenListProvider,
     tokenValidatorProvider?: ITokenValidatorProvider
   ) {
     super(
       tokenProvider,
+      chainId,
       Protocol.V3,
       blockedTokenListProvider,
       tokenValidatorProvider
     );
+
     this.v3SubgraphProvider = v3SubgraphProvider;
     this.v3PoolProvider = v3PoolProvider;
     this.onChainQuoteProvider = onChainQuoteProvider;
@@ -69,6 +71,7 @@ export class V3Quoter extends BaseQuoter<V3CandidatePools, V3Route> {
     // of pools, so we filter them to a set of candidate pools that we expect will
     // result in good prices.
     const { poolAccessor, candidatePools } = v3CandidatePools;
+
     const poolsRaw = poolAccessor.getAllPools();
 
     // Drop any pools that contain fee on transfer tokens (not supported by v3) or have issues with being transferred.
@@ -187,6 +190,7 @@ export class V3Quoter extends BaseQuoter<V3CandidatePools, V3Route> {
       for (let i = 0; i < quotes.length; i++) {
         const percent = percents[i]!;
         const amountQuote = quotes[i]!;
+
         const {
           quote,
           amount,

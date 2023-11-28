@@ -397,7 +397,7 @@ export class AlphaRouter
     this.v3PoolProvider =
       v3PoolProvider ??
       new CachingV3PoolProvider(
-        new V3PoolProvider(this.multicall2Provider),
+        new V3PoolProvider(this.chainId, this.multicall2Provider),
         new NodeJSCache(new NodeCache({ stdTTL: 360, useClones: false }))
       );
     this.simulator = simulator;
@@ -470,7 +470,7 @@ export class AlphaRouter
         new TokenProvider(this.multicall2Provider)
       );
 
-    const chainName = TO_NETWORK_NAME();
+    const chainName = TO_NETWORK_NAME(this.chainId);
 
     if (v3SubgraphProvider) {
       this.v3SubgraphProvider = v3SubgraphProvider;
@@ -523,6 +523,7 @@ export class AlphaRouter
       this.v3PoolProvider,
       this.onChainQuoteProvider,
       this.tokenProvider,
+      this.chainId,
       this.blockedTokenListProvider,
       this.tokenValidatorProvider
     );
@@ -1213,6 +1214,7 @@ export class AlphaRouter
       percents,
       allRoutesWithValidQuotes,
       tradeType,
+      this.chainId,
       routingConfig,
       v3GasModel
     );
@@ -1268,7 +1270,6 @@ export class AlphaRouter
     // Maybe Quote V3 - if V3 is specified, or no protocol is specified
     if (v3ProtocolSpecified || noProtocolsSpecified) {
       log.info({ protocols, tradeType }, "Routing across V3");
-
       metric.putMetric(
         "SwapRouteFromChain_V3_GetRoutesThenQuotes_Request",
         1,
@@ -1308,6 +1309,7 @@ export class AlphaRouter
 
     const allRoutesWithValidQuotes: RouteWithValidQuote[] = [];
     const allCandidatePools: CandidatePoolsBySelectionCriteria[] = [];
+
     getQuotesResults.forEach((getQuoteResult) => {
       allRoutesWithValidQuotes.push(...getQuoteResult.routesWithValidQuotes);
       if (getQuoteResult.candidatePools) {
@@ -1326,6 +1328,7 @@ export class AlphaRouter
       percents,
       allRoutesWithValidQuotes,
       tradeType,
+      this.chainId,
       routingConfig,
       v3GasModel
     );
@@ -1403,14 +1406,16 @@ export class AlphaRouter
       ? getHighestLiquidityV3NativePool(
         quoteToken,
         this.v3PoolProvider,
-        providerConfig
+        providerConfig,
+        this.chainId
       )
       : Promise.resolve(null);
     const nativeAmountTokenV3PoolPromise = !amountToken.equals(nativeCurrency)
       ? getHighestLiquidityV3NativePool(
         amountToken,
         this.v3PoolProvider,
-        providerConfig
+        providerConfig,
+        this.chainId
       )
       : Promise.resolve(null);
 
@@ -1432,7 +1437,7 @@ export class AlphaRouter
       pools,
       amountToken,
       quoteToken,
-
+      chainId: this.chainId,
       l2GasDataProvider: this.l2GasDataProvider,
       providerConfig: providerConfig,
     });

@@ -41,20 +41,20 @@ export abstract class BaseQuoter<
   Route extends V3Route
 > {
   protected tokenProvider: ITokenProvider;
-
+  protected chainId: number;
   protected protocol: Protocol;
   protected blockedTokenListProvider?: ITokenListProvider;
   protected tokenValidatorProvider?: ITokenValidatorProvider;
 
   constructor(
     tokenProvider: ITokenProvider,
-
+    chainId: number,
     protocol: Protocol,
     blockedTokenListProvider?: ITokenListProvider,
     tokenValidatorProvider?: ITokenValidatorProvider
   ) {
     this.tokenProvider = tokenProvider;
-
+    this.chainId = chainId;
     this.protocol = protocol;
     this.blockedTokenListProvider = blockedTokenListProvider;
     this.tokenValidatorProvider = tokenValidatorProvider;
